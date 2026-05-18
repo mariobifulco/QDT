@@ -18,30 +18,11 @@ DATASETS = {
         "label": "Wine",
         "color": "#ff7f0e",
     },
+    "breast_cancer": {
+        "label": "Breast Cancer",
+        "color": "#10c100",
+    },
 }
-
-
-def aggregate_dataset(dataset_key: str) -> pd.DataFrame:
-    df = pd.read_csv(RESULTS_DIR / f"{dataset_key}.csv")
-    grouped = (
-        df.groupby("batch_size")
-        .agg(
-            classical_accuracy_mean=("classical_accuracy", "mean"),
-            classical_accuracy_std=("classical_accuracy", "std"),
-            quantum_accuracy_mean=("quantum_accuracy", "mean"),
-            quantum_accuracy_std=("quantum_accuracy", "std"),
-            quantum_train_s_mean=("quantum_train_s", "mean"),
-            quantum_train_s_std=("quantum_train_s", "std"),
-            quantum_predict_s_mean=("quantum_predict_s", "mean"),
-            quantum_predict_s_std=("quantum_predict_s", "std"),
-            train_peak_python_mib_mean=("train_peak_python_mib", "mean"),
-            train_peak_python_mib_std=("train_peak_python_mib", "std"),
-            predict_peak_python_mib_mean=("predict_peak_python_mib", "mean"),
-            predict_peak_python_mib_std=("predict_peak_python_mib", "std"),
-        )
-        .reset_index()
-    )
-    return grouped
 
 
 def build_summary_row(dataset_key: str, stats: pd.DataFrame) -> dict[str, float | int | str]:
@@ -58,8 +39,8 @@ def build_summary_row(dataset_key: str, stats: pd.DataFrame) -> dict[str, float 
     mem_b1 = float(
         stats.loc[stats["batch_size"] == 1, "train_peak_python_mib_mean"].iloc[0]
     )
-    mem_b20 = float(
-        stats.loc[stats["batch_size"] == 20, "train_peak_python_mib_mean"].iloc[0]
+    mem_b21 = float(
+        stats.loc[stats["batch_size"] == 21, "train_peak_python_mib_mean"].iloc[0]
     )
 
     return {
@@ -77,8 +58,8 @@ def build_summary_row(dataset_key: str, stats: pd.DataFrame) -> dict[str, float 
         "best_predict_time_s": float(best_predict["quantum_predict_s_mean"]),
         "best_predict_speedup": predict_b1 / float(best_predict["quantum_predict_s_mean"]),
         "train_memory_b1_mib": mem_b1,
-        "train_memory_b20_mib": mem_b20,
-        "train_memory_growth_b20_over_b1": mem_b20 / mem_b1,
+        "train_memory_b21_mib": mem_b21,
+        "train_memory_growth_b21_over_b1": mem_b21 / mem_b1,
     }
 
 
@@ -109,21 +90,19 @@ def plot_runtime(stats_by_dataset: dict[str, pd.DataFrame]) -> None:
         )
 
     train_ax.set_title("Training Time")
-    train_ax.set_xlabel("Stitching factor")
+    train_ax.set_xlabel("Batching factor")
     train_ax.set_ylabel("Time [s]")
     train_ax.set_yscale("log")
     train_ax.grid(True, which="both", alpha=0.25)
+    train_ax.legend(loc="upper right", frameon=True)
 
     predict_ax.set_title("Prediction Time")
-    predict_ax.set_xlabel("Stitching factor")
+    predict_ax.set_xlabel("Batching factor")
     predict_ax.set_ylabel("Time [s]")
     predict_ax.grid(True, alpha=0.25)
+    predict_ax.legend(loc="upper right", frameon=True)
 
-    handles, labels = train_ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False)
-
-    for suffix in ("pdf", "png"):
-        fig.savefig(RESULTS_DIR / f"runtime_stitching.{suffix}", dpi=240, bbox_inches="tight")
+    fig.savefig(RESULTS_DIR / f"runtime_batching.pdf", dpi=240, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -154,27 +133,25 @@ def plot_memory(stats_by_dataset: dict[str, pd.DataFrame]) -> None:
         )
 
     train_ax.set_title("Training Peak Memory")
-    train_ax.set_xlabel("Stitching factor")
+    train_ax.set_xlabel("Batching factor")
     train_ax.set_ylabel("Memory [MiB]")
     train_ax.set_yscale("log")
     train_ax.grid(True, which="both", alpha=0.25)
+    train_ax.legend(loc="upper left", frameon=True)
 
     predict_ax.set_title("Prediction Peak Memory")
-    predict_ax.set_xlabel("Stitching factor")
+    predict_ax.set_xlabel("Batching factor")
     predict_ax.set_ylabel("Memory [MiB]")
     predict_ax.set_yscale("log")
     predict_ax.grid(True, which="both", alpha=0.25)
+    predict_ax.legend(loc="upper left", frameon=True)
 
-    handles, labels = train_ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False)
-
-    for suffix in ("pdf", "png"):
-        fig.savefig(RESULTS_DIR / f"memory_stitching.{suffix}", dpi=240, bbox_inches="tight")
+    fig.savefig(RESULTS_DIR / f"memory_batching.pdf", dpi=240, bbox_inches="tight")
     plt.close(fig)
 
 
 def main() -> None:
-    stats_by_dataset = {dataset_key: aggregate_dataset(dataset_key) for dataset_key in DATASETS}
+    stats_by_dataset = {dataset_key: pd.read_csv(f"{dataset_key}_mean.csv") for dataset_key in DATASETS}
     plot_runtime(stats_by_dataset)
     plot_memory(stats_by_dataset)
 
