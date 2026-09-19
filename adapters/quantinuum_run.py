@@ -19,11 +19,11 @@ def stitch_and_run(circuits: list) -> np.ndarray:
         circ = qiskit_to_tk(qiskit_circ)
         for command in circ.get_commands():
             if command.op.type != OpType.Measure:
-                stitched.add_gate(command.op.type, command.op.params, [
-                                  stitched.qubits[target_qubit]])
+                stitched.add_gate(
+                    command.op.type, command.op.params, [stitched.qubits[target_qubit]]
+                )
 
-        stitched.Measure(
-            stitched.qubits[target_qubit], stitched.bits[target_bit])
+        stitched.Measure(stitched.qubits[target_qubit], stitched.bits[target_bit])
 
         if (i + n_qubits) < n_total:
             stitched.add_gate(OpType.Reset, [stitched.qubits[target_qubit]])

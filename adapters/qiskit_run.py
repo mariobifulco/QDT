@@ -19,7 +19,9 @@ def _run_batch(circuits: list[CircuitSpec]) -> list[bool]:
         stitched.ry(theta_y, qubit)
 
     statevector = Statevector.from_instruction(stitched)
-    return [statevector.probabilities([qubit])[0] >= 0.5 for qubit in range(len(circuits))]
+    return [
+        statevector.probabilities([qubit])[0] >= 0.5 for qubit in range(len(circuits))
+    ]
 
 
 def stitch_and_run(circuits: list[CircuitSpec], batch_size: int = 1) -> np.ndarray:
@@ -28,5 +30,5 @@ def stitch_and_run(circuits: list[CircuitSpec], batch_size: int = 1) -> np.ndarr
 
     results: list[bool] = []
     for start in range(0, len(circuits), batch_size):
-        results.extend(_run_batch(circuits[start:start + batch_size]))
+        results.extend(_run_batch(circuits[start : start + batch_size]))
     return np.asarray(results, dtype=bool)
