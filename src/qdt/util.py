@@ -1,37 +1,13 @@
-from dataclasses import dataclass
-from quantum_tree import fit, predict
-from data import PreparedDataset
+from .quantum_tree import fit, predict
+from .data import PreparedDataset
 from sklearn.tree import DecisionTreeClassifier
-import numpy as np
 from memory_profiler import memory_usage
 from sklearn.metrics import accuracy_score
 import csv
 import time
 from dataclasses import asdict
 from pathlib import Path
-
-
-@dataclass(frozen=True)
-class RunRecord:
-    dataset: str
-    batch_size: int
-    train_samples: int
-    test_samples: int
-    original_dim: int
-    selected_dim: int
-    classical_accuracy: float
-    classical_train_s: float
-    classical_predict_s: float
-    classical_total_s: float
-    quantum_accuracy: float
-    quantum_train_s: float
-    quantum_predict_s: float
-    quantum_total_s: float
-    train_peak_python_mib: float
-    predict_peak_python_mib: float
-
-
-CircuitSpec = tuple[float, float, float]
+from .types import RunRecord
 
 
 def timed(fn) -> tuple[object, float]:
@@ -120,34 +96,3 @@ def export_csv(records: list, csv_path: str) -> None:
         if not file_exists:
             writer.writeheader()
         writer.writerows(asdict(record) for record in records)
-
-
-def gini_impurity(labels: np.ndarray) -> float:
-    _, counts = np.unique(labels, return_counts=True)
-    probs = counts / counts.sum()
-    return float(1.0 - np.sum(probs**2))
-
-
-def majority_class(labels: np.ndarray) -> int:
-    values, counts = np.unique(labels, return_counts=True)
-    return int(values[np.argmax(counts)]) if len(values) else 0
-
-
-def split_score(left_mask: np.ndarray, labels: np.ndarray) -> float:
-    left = labels[left_mask]
-    right = labels[~left_mask]
-
-    if len(left) == 0 or len(right) == 0:
-        return 1.0
-
-    total = len(labels)
-    return (len(left) * gini_impurity(left) + len(right) * gini_impurity(right)) / total
-
-
-@dataclass
-class QNode:
-    feature_idx: int | None = None
-    theta: np.ndarray | None = None
-    left: "QNode | None" = None
-    right: "QNode | None" = None
-    value: int | None = None

@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import cudaq
 
-from util import CircuitSpec
+from qdt.util import CircuitSpec
 
 cudaq.set_target("nvidia")
 

@@ -9,10 +9,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from data import get_data
-from quantum_tree import stitch_and_run
-from results.plot_stitching_results import plot_memory, plot_runtime
-from util import RunRecord, export_csv, run_classical_baseline, run_quantum_experiment
+from .data import get_data
+from .quantum_tree import stitch_and_run
+from .plot_stitching_results import plot_memory, plot_runtime
+from .util import RunRecord, export_csv, run_classical_baseline, run_quantum_experiment
 
 
 def save_summary(records: list[RunRecord], output_dir: Path) -> None:
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> None:
     config = {
         "dataset": "iris",
         "iterations": 1,
-        "batch_sizes": list(range(1, 19)),
+        "batch_sizes": list(range(5, 6)),
         "seed": args.seed,
         "max_depth": args.depth,
         "test_size": 0.2,

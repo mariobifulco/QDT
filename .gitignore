@@ -9,3 +9,5 @@ wandb/
 results/iris-wandb/
 results/iris/
 *.pdf
+old_results
+.ruff_cache

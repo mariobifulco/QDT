@@ -10,7 +10,7 @@ from iqm.qiskit_iqm.iqm_backend import IQMBackendBase
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
 
-from util import CircuitSpec
+from ..types import CircuitSpec
 
 
 @lru_cache(maxsize=1)
