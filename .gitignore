@@ -8,3 +8,4 @@ __pycache__
 wandb/
 results/iris-wandb/
 results/iris/
+*.pdf
