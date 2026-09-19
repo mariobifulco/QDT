@@ -121,19 +121,15 @@ def prepare_dataset(
     X_raw, y_raw = loader()
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X_raw,
-        y_raw,
-        test_size=test_size,
-        stratify=y_raw,
-        random_state=seed
+        X_raw, y_raw, test_size=test_size, stratify=y_raw, random_state=seed
     )
 
     X_train, X_test = _normalize_from_train(X_train, X_test)
-    X_train, y_train = _remove_train_quasi_duplicates(
-        X_train, y_train, quasi_dup_tol)
+    X_train, y_train = _remove_train_quasi_duplicates(X_train, y_train, quasi_dup_tol)
     X_train, y_train = _remove_train_outliers(X_train, y_train, outlier_alpha)
     X_train, X_test = _select_features_from_train(
-        X_train, X_test, var_thresh, corr_thresh)
+        X_train, X_test, var_thresh, corr_thresh
+    )
 
     return PreparedDataset(
         name=name,

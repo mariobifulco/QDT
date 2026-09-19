@@ -3,8 +3,9 @@ from __future__ import annotations
 import numpy as np
 from scipy.optimize import minimize
 
-# from qiskit_run import stitch_and_run
-from cudaq_run import stitch_and_run
+# from adapters.qiskit_run import stitch_and_run
+# from adapters.cudaq_run import stitch_and_run
+from adapters.iqm_run import stitch_and_run
 
 from util import QNode, majority_class, split_score, CircuitSpec
 
