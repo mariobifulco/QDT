@@ -18,5 +18,3 @@ for ds in "${DATASETS[@]}"; do
 done
 
 echo "Done"
-
-# 36068

@@ -11,3 +11,7 @@ results/iris/
 *.pdf
 old_results
 .ruff_cache
+datasets/
+logs/
+results/campaigns/
+results/verification/

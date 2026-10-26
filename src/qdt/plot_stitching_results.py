@@ -6,9 +6,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
 import pandas as pd
-
+from matplotlib.ticker import MaxNLocator
 
 RESULTS_DIR = Path(__file__).resolve().parent
 DATASETS = {
@@ -83,9 +82,12 @@ def add_training_annotations(ax: plt.Axes) -> None:
 
     xmin, xmax = ax.get_xlim()
     trans = ax.get_xaxis_transform()
-    bbox_props = dict(
-        boxstyle="round,pad=0.2", facecolor="white", alpha=0.8, edgecolor="lightgray"
-    )
+    bbox_props = {
+        "boxstyle": "round,pad=0.2",
+        "facecolor": "white",
+        "alpha": 0.8,
+        "edgecolor": "lightgray",
+    }
 
     ax.text(
         (xmin + x1) / 2,

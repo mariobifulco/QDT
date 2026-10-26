@@ -1,12 +1,14 @@
-from .quantum_tree import fit, predict
-from .data import PreparedDataset
-from sklearn.tree import DecisionTreeClassifier
-from memory_profiler import memory_usage
-from sklearn.metrics import accuracy_score
 import csv
 import time
 from dataclasses import asdict
 from pathlib import Path
+
+from memory_profiler import memory_usage
+from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+
+from .data import PreparedDataset
+from .quantum_tree import fit, predict
 from .types import RunRecord
 
 

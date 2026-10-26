@@ -1,8 +1,7 @@
 import numpy as np
-from pytket.circuit import OpType
 from pytket import Circuit
-from pytket.extensions.qiskit import AerBackend
-from pytket.extensions.qiskit import qiskit_to_tk
+from pytket.circuit import OpType
+from pytket.extensions.qiskit import AerBackend, qiskit_to_tk
 
 SHOTS = 100
 MAX_STITCH = 40

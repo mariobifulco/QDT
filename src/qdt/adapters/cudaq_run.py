@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import numpy as np
 import cudaq
+import numpy as np
 
-from qdt.util import CircuitSpec
+from qdt.types import CircuitSpec
 
 cudaq.set_target("nvidia")
 
