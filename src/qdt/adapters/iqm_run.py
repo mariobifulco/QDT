@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 from qiskit import QuantumCircuit
+from qiskit.circuit import ParameterVector
 from qiskit_aer import AerSimulator
 
 from . import circuit_array
@@ -11,6 +12,7 @@ from .qiskit_run import Adapter as AerAdapter
 class Adapter:
     def __init__(self, config):
         self.config = config
+        self.circuit = config.circuit
         self.calls = self.circuits = 0
         self.rng = np.random.default_rng(config.seed)
         self.mode = os.getenv("IQM_BACKEND", "fake").lower()
@@ -50,27 +52,59 @@ class Adapter:
                 url=url,
                 quantum_computer=os.getenv("IQM_QUANTUM_COMPUTER", "garnet"),
             ).get_backend()
+        self.capacity = self.backend.num_qubits // self.circuit.num_qubits
+        if not self.capacity:
+            raise ValueError("Circuit exceeds IQM backend qubit capacity")
+        self.templates = {}
+        self._template(min(config.batch_size, self.capacity))
+
+    def _template(self, size):
+        if size not in self.templates:
+            parameters = ParameterVector("batch", size * self.circuit.num_inputs)
+            qc = QuantumCircuit(size * self.circuit.num_qubits, size)
+            for sample in range(size):
+                offset = sample * self.circuit.num_inputs
+                bindings = dict(
+                    zip(
+                        self.circuit.parameters,
+                        parameters[offset : offset + self.circuit.num_inputs],
+                        strict=True,
+                    )
+                )
+                circuit = self.circuit.template.assign_parameters(
+                    bindings, flat_input=True
+                )
+                wires = list(
+                    range(
+                        sample * self.circuit.num_qubits,
+                        (sample + 1) * self.circuit.num_qubits,
+                    )
+                )
+                qc.compose(circuit, qubits=wires, inplace=True)
+                qc.measure(wires[self.circuit.readout_qubit], sample)
+            compiled = self.transpile(
+                qc, backend=self.backend, seed_transpiler=self.config.seed
+            )
+            self.templates[size] = compiled, parameters
+        return self.templates[size]
 
     def probabilities(self, circuits, batch_size=1):
-        angles = circuit_array(circuits, batch_size)
+        angles = circuit_array(circuits, batch_size, self.circuit.num_inputs)
         if not len(angles):
             return np.empty(0)
         self.calls += 1
         self.circuits += len(angles)
         if self.mode == "sim":
             return self.simulator.probabilities(angles, batch_size)
-        batch_size = min(batch_size, self.backend.num_qubits)
+        batch_size = min(batch_size, self.capacity)
         probabilities = []
         for start in range(0, len(angles), batch_size):
             batch = angles[start : start + batch_size]
-            qc = QuantumCircuit(len(batch), len(batch))
-            for q, (a, z, b) in enumerate(batch):
-                qc.ry(a, q)
-                qc.rz(z, q)
-                qc.ry(b, q)
-                qc.measure(q, q)
-            compiled = self.transpile(
-                qc, backend=self.backend, seed_transpiler=self.config.seed
+            template, parameters = self._template(len(batch))
+            compiled = template.assign_parameters(
+                dict(zip(parameters, batch.ravel(), strict=True)),
+                flat_input=True,
+                strict=False,
             )
             executor = self.simulator if self.mode == "fake" else self.backend
             options = (

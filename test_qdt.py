@@ -13,6 +13,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 from qdt.adapters.qiskit_run import Adapter
+from qdt.circuit import Circuit
 from qdt.config import Config
 from qdt.data import DATASET_KEYS, prepare_dataset, select_features
 from qdt.optimization import gini, optimize_split, soft_gini, split_score
@@ -20,6 +21,147 @@ from qdt.quantum_tree import fit, predict, run_probabilities
 
 
 class QDTTests(unittest.TestCase):
+    def test_circuit_validation_roundtrip_and_parameter_dimensions(self):
+        circuit = Circuit(
+            num_qubits=2,
+            readout_qubit=1,
+            gates=(
+                ("ry", 0, "x[0]"),
+                ("rx", 1, "x[1]"),
+                ("cx", 0, 1),
+                *(("ry", i % 2, f"theta[{i}]") for i in range(5)),
+                ("rz", 0, "x[0]"),
+                ("h", 0),
+                ("cz", 0, 1),
+                ("rx", 1, 0.3),
+            ),
+        )
+        self.assertEqual((circuit.num_features, circuit.num_parameters), (2, 5))
+        self.assertIs(circuit.template, circuit.template)
+        config = Config(circuit=circuit, max_evals=14, restarts=2)
+        decoded = Config(**json.loads(json.dumps(asdict(config))))
+        self.assertEqual(config, decoded)
+        calls = []
+        labels = np.tile([0, 1], 5)
+
+        def probabilities(theta):
+            calls.append(theta.copy())
+            return np.linspace(0.1, 0.9, len(labels))
+
+        optimize_split(probabilities, labels, config, np.random.default_rng(4))
+        self.assertTrue(calls)
+        self.assertLessEqual(len(calls), config.max_evals)
+        self.assertTrue(all(len(theta) == 5 for theta in calls))
+        with self.assertRaises(ValueError):
+            replace(config, max_evals=13)
+        for definition in (
+            {"num_qubits": 0},
+            {"readout_qubit": 1},
+            {"gates": [["ry", 0, "x[1]"], ["rz", 0, "theta[0]"]]},
+            {"gates": [["ry", 0, "x[0]"], ["rz", 0, "theta[1]"]]},
+            {"gates": [["ry", 0, "x[0]"], ["cx", 0, 0]]},
+            {"gates": [["ry", 0, "x[0]+theta[0]"]]},
+            {"gates": [["ry", 0, float("nan")]]},
+            {"gates": [["unknown", 0]]},
+        ):
+            with self.subTest(definition=definition), self.assertRaises(ValueError):
+                Circuit(**definition)
+        with self.assertRaises(ValueError):
+            Config(circuit=circuit, top_k=1)
+
+    def test_multiqubit_entanglement_readout_and_template_reuse(self):
+        from qiskit import QuantumCircuit
+        from qiskit.quantum_info import Statevector
+
+        circuit = Circuit(
+            num_qubits=3,
+            readout_qubit=2,
+            gates=(
+                ("ry", 0, "x[0]"),
+                ("rx", 1, "x[1]"),
+                ("h", 2),
+                ("cx", 0, 1),
+                ("cz", 1, 2),
+                ("ry", 2, "theta[0]"),
+                ("rz", 0, "theta[1]"),
+                ("cx", 1, 2),
+                ("ry", 0, "x[0]"),
+            ),
+        )
+        rows = np.random.default_rng(81).uniform(-3, 3, (9, 4))
+        expected = []
+        for x0, x1, t0, t1 in rows:
+            qc = QuantumCircuit(3)
+            qc.ry(x0, 0)
+            qc.rx(x1, 1)
+            qc.h(2)
+            qc.cx(0, 1)
+            qc.cz(1, 2)
+            qc.ry(t0, 2)
+            qc.rz(t1, 0)
+            qc.cx(1, 2)
+            qc.ry(x0, 0)
+            expected.append(Statevector.from_instruction(qc).probabilities([2])[0])
+        config = Config(circuit=circuit)
+        adapter = Adapter(config)
+        template = adapter.template
+        for batch in (1, 4, 64):
+            np.testing.assert_allclose(
+                adapter.probabilities(rows, batch), expected, atol=1e-12
+            )
+            self.assertIs(adapter.template, template)
+            self.assertEqual(len(adapter.template.parameters), 4)
+        noisy = replace(
+            config,
+            depolarizing=0.03,
+            amplitude_damping=0.02,
+            phase_damping=0.01,
+            readout_error=0.04,
+        )
+        exact = Adapter(noisy).probabilities(rows, 4)
+        sampled = replace(noisy, shots=8192)
+        actual = Adapter(sampled).probabilities(rows, 4)
+        np.testing.assert_allclose(actual, exact, atol=0.03)
+        np.testing.assert_array_equal(actual, Adapter(sampled).probabilities(rows, 4))
+
+    def test_multifeature_tree_groups_and_saved_parameters(self):
+        circuit = Circuit(
+            num_qubits=2,
+            readout_qubit=1,
+            gates=(
+                ("ry", 0, "x[0]"),
+                ("ry", 1, "x[1]"),
+                ("cx", 0, 1),
+                ("ry", 1, "theta[0]"),
+                ("rz", 0, "theta[1]"),
+            ),
+        )
+        config = Config(circuit=circuit, max_depth=2, max_evals=8, restarts=1)
+        X = np.tile([[0, 0], [0, 1], [1, 0], [1, 1]], (5, 1))
+        y = (X[:, 0] != X[:, 1]).astype(int)
+        X = np.column_stack((X, np.linspace(0, 0.1, len(X)), np.zeros(len(X))))
+        adapter = Adapter(config)
+        tree = fit(X, y, config, adapter=adapter)
+        self.assertIsNone(tree.value)
+        self.assertEqual(len(tree.feature_indices), 2)
+        self.assertEqual(len(tree.theta), 2)
+        np.testing.assert_array_equal(predict(X, tree, config), y)
+        self.assertLessEqual(
+            adapter.calls, (X.shape[1] - circuit.num_features + 1) * config.max_evals
+        )
+        with self.assertRaises(ValueError):
+            fit(X[:, :1], y, config)
+        # A different architecture also supports more than two fitted angles.
+        expanded = replace(
+            circuit,
+            gates=(*circuit.gates, ("rx", 1, "theta[2]"), ("ry", 1, "theta[3]")),
+        )
+        config = replace(config, circuit=expanded)
+        tree = fit(X[:, :2], y, config)
+        self.assertIsNone(tree.value)
+        self.assertEqual(len(tree.theta), 4)
+        np.testing.assert_array_equal(predict(X[:, :2], tree, config), y)
+
     def test_aer_ideal_matches_formula_and_batching(self):
         angles = np.random.default_rng(4).uniform(-4, 4, (9, 3))
         a, z, b = angles.T

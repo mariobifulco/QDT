@@ -15,6 +15,7 @@ import numpy as np
 from qdt.adapters import get_adapter
 from qdt.adapters.iqm_run import Adapter as IQMAdapter
 from qdt.adapters.qiskit_run import Adapter as AerAdapter
+from qdt.circuit import Circuit
 from qdt.config import Config
 
 ANGLES = np.vstack(
@@ -29,6 +30,107 @@ NOISE = {
 
 
 class AdapterTests(unittest.TestCase):
+    @unittest.skipUnless(importlib.util.find_spec("iqm"), "Install the iqm extra")
+    @patch.dict(os.environ, IQM_BACKEND="fake")
+    def test_iqm_entangled_samples_compile_once_per_batch_shape(self):
+        from iqm.qiskit_iqm import transpile_to_IQM
+
+        circuit = Circuit(
+            num_qubits=2,
+            readout_qubit=1,
+            gates=(
+                ("ry", 0, "x[0]"),
+                ("ry", 1, "x[1]"),
+                ("cx", 0, 1),
+                ("ry", 1, "theta[0]"),
+                ("rz", 0, "theta[1]"),
+            ),
+        )
+        config = Config(backend="iqm", circuit=circuit, shots=256)
+        rows = np.tile(
+            [[0, np.pi, 0, 0], [np.pi, 0, 0, 0], [np.pi, np.pi, 0, 0], [0, 0, 0, 0]],
+            (3, 1),
+        )
+        with patch(
+            "iqm.qiskit_iqm.transpile_to_IQM", wraps=transpile_to_IQM
+        ) as compile_circuit:
+            adapter = get_adapter(config)
+            with patch.object(
+                adapter.simulator, "run", wraps=adapter.simulator.run
+            ) as run:
+                actual = adapter.probabilities(rows, 64)
+                self.assertEqual(
+                    [call.args[0].num_clbits for call in run.call_args_list], [10, 2]
+                )
+            self.assertEqual(compile_circuit.call_count, 2)
+            templates = dict(adapter.templates)
+            adapter.probabilities(rows, 64)
+            self.assertEqual(compile_circuit.call_count, 2)
+            for size in templates:
+                self.assertIs(templates[size][0], adapter.templates[size][0])
+        np.testing.assert_allclose(actual, [0, 0, 1, 1] * 3, atol=0.2)
+        np.testing.assert_array_equal(
+            actual, get_adapter(config).probabilities(rows, 64)
+        )
+
+    @unittest.skipUnless(importlib.util.find_spec("cudaq"), "Install the cudaq extra")
+    @patch.dict(os.environ, CUDAQ_TARGET="density-matrix-cpu")
+    def test_cudaq_entanglement_and_gate_noise_match_aer(self):
+        circuit = Circuit(
+            num_qubits=3,
+            readout_qubit=1,
+            gates=(
+                ("ry", 0, "x[0]"),
+                ("rx", 1, "x[1]"),
+                ("h", 2),
+                ("x", 0),
+                ("y", 1),
+                ("z", 2),
+                ("s", 0),
+                ("t", 1),
+                ("rz", 0, "theta[0]"),
+                ("cx", 0, 1),
+                ("cz", 1, 2),
+                ("ry", 1, "theta[1]"),
+                ("swap", 0, 2),
+                ("ry", 1, "x[0]"),
+            ),
+        )
+        rows = np.random.default_rng(8).uniform(-3, 3, (5, 4))
+        for rates in ({}, NOISE):
+            config = Config(backend="cudaq", circuit=circuit, **rates)
+            adapter = get_adapter(config)
+            kernel = adapter.kernel
+            expected = AerAdapter(config).probabilities(rows, 2)
+            np.testing.assert_allclose(
+                adapter.probabilities(rows, 64), expected, atol=1e-11
+            )
+            np.testing.assert_allclose(
+                adapter.probabilities(rows, 2), expected, atol=1e-11
+            )
+            self.assertIs(adapter.kernel, kernel)
+            sampled = replace(config, shots=8192)
+            actual = get_adapter(sampled).probabilities(rows, 64)
+            np.testing.assert_allclose(actual, expected, atol=0.03)
+            np.testing.assert_array_equal(
+                actual, get_adapter(sampled).probabilities(rows, 64)
+            )
+        # Explicit asymmetric basis states detect reversed bitstring order.
+        circuit = Circuit(
+            num_qubits=2,
+            readout_qubit=1,
+            gates=(
+                ("ry", 0, "x[0]"),
+                ("ry", 1, "x[1]"),
+                ("rz", 0, "theta[0]"),
+            ),
+        )
+        config = Config(backend="cudaq", circuit=circuit, shots=64)
+        np.testing.assert_array_equal(
+            get_adapter(config).probabilities([[0, np.pi, 0], [np.pi, 0, 0]], 64),
+            [0, 1],
+        )
+
     def check_inputs(self, adapter):
         self.assertEqual(adapter.probabilities([], 64).size, 0)
         for angles, batch in (
@@ -187,7 +289,6 @@ class AdapterTests(unittest.TestCase):
                 AerAdapter(replace(config, shots=0)).probabilities(ANGLES, 2),
                 atol=0.03,
             )
-        # Another adapter changed the process-global target in between calls.
         np.testing.assert_allclose(
             ideal.probabilities(ANGLES),
             AerAdapter(Config()).probabilities(ANGLES),

@@ -1,13 +1,15 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
+from .circuit import Circuit
 from .data import DATASET_KEYS
 
 
 @dataclass(frozen=True)
 class Config:
     backend: str = "aer"
+    circuit: Circuit = field(default_factory=Circuit)
     dataset: str = "iris"
     data_dir: str = "datasets"
     seed: int = 42
@@ -28,12 +30,21 @@ class Config:
     corr_threshold: float = 0.95
 
     def __post_init__(self):
+        if isinstance(self.circuit, dict):
+            object.__setattr__(self, "circuit", Circuit(**self.circuit))
+        if not isinstance(self.circuit, Circuit):
+            raise ValueError("circuit must be a Circuit or its JSON definition")
         if self.backend not in {"aer", "iqm", "cudaq"}:
             raise ValueError("backend must be aer, iqm or cudaq")
         if self.dataset not in DATASET_KEYS:
             raise ValueError(f"Unknown dataset: {self.dataset}")
-        if self.restarts < 1 or self.max_evals < 4 * self.restarts:
-            raise ValueError("max_evals must be >= 4 * restarts")
+        minimum = self.circuit.num_parameters + 2
+        if self.restarts < 1 or self.max_evals < minimum * self.restarts:
+            raise ValueError(
+                f"max_evals must be >= {minimum} * restarts for this circuit"
+            )
+        if self.top_k is not None and self.top_k < self.circuit.num_features:
+            raise ValueError("top_k must retain at least circuit.num_features columns")
         if self.seed < 0 or self.batch_size < 1 or self.shots < 0 or self.threads < 1:
             raise ValueError("Invalid seed, batch size, shots or threads")
         if (

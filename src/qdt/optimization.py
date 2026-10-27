@@ -49,7 +49,7 @@ def optimize_split(probabilities, labels, config, rng):
 
         minimize(
             objective,
-            rng.uniform(0, 2 * np.pi, 2),
+            rng.uniform(0, 2 * np.pi, config.circuit.num_parameters),
             method="COBYLA",
             options={"maxiter": budget},
         )

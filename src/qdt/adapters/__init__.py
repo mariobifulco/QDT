@@ -8,12 +8,14 @@ def get_adapter(config):
     return import_module(f".{module[config.backend]}", __name__).Adapter(config)
 
 
-def circuit_array(circuits, batch_size):
+def circuit_array(circuits, batch_size, num_inputs=3):
     if not isinstance(batch_size, (int, np.integer)) or batch_size < 1:
         raise ValueError("batch_size must be an integer >= 1")
     if not len(circuits):
-        return np.empty((0, 3))
+        return np.empty((0, num_inputs))
     angles = np.asarray(circuits, dtype=float)
-    if angles.shape != (len(circuits), 3) or not np.isfinite(angles).all():
-        raise ValueError("Expected finite (feature_angle, theta_z, theta_y) triples")
+    if angles.shape != (len(circuits), num_inputs) or not np.isfinite(angles).all():
+        raise ValueError(
+            f"Expected finite input rows of width {num_inputs}: data angles, then variational angles"
+        )
     return angles

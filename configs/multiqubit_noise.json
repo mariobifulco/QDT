@@ -1,0 +1,35 @@
+{
+  "backend": "aer",
+  "dataset": "breast_cancer",
+  "data_dir": "datasets",
+  "seed": 42,
+  "test_size": 0.2,
+  "max_train_samples": null,
+  "batch_size": 64,
+  "shots": 4096,
+  "threads": 1,
+  "depolarizing": 0.001,
+  "amplitude_damping": 0.002,
+  "phase_damping": 0.001,
+  "readout_error": 0.01,
+  "top_k": 4,
+  "corr_threshold": 0.95,
+  "max_depth": 2,
+  "min_samples_leaf": 2,
+  "max_evals": 100,
+  "restarts": 2,
+  "circuit": {
+    "num_qubits": 2,
+    "readout_qubit": 0,
+    "gates": [
+      ["ry", 0, "x[0]"],
+      ["ry", 1, "x[1]"],
+      ["rz", 0, "theta[0]"],
+      ["rz", 1, "theta[1]"],
+      ["cx", 1, 0],
+      ["ry", 0, "theta[2]"],
+      ["ry", 1, "theta[3]"],
+      ["cx", 1, 0]
+    ]
+  }
+}

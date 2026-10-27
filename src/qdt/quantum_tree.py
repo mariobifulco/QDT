@@ -9,18 +9,28 @@ from .optimization import optimize_split, split_score
 
 @dataclass
 class QNode:
-    feature_idx: int | None = None
-    theta: tuple[float, float] | None = None
+    feature_indices: tuple[int, ...] | None = None
+    theta: tuple[float, ...] | None = None
     left: "QNode | None" = None
     right: "QNode | None" = None
     value: int | None = None
 
 
 def run_probabilities(values, theta, adapter, config):
-    circuits = [
-        (float(value) * np.pi, float(theta[0]), float(theta[1])) for value in values
-    ]
-    return adapter.probabilities(circuits, config.batch_size)
+    values = np.asarray(values, dtype=float)
+    if values.ndim == 1:
+        values = values[:, None]
+    theta = np.asarray(theta, dtype=float)
+    if (
+        values.ndim != 2
+        or values.shape[1] != config.circuit.num_features
+        or theta.shape != (config.circuit.num_parameters,)
+    ):
+        raise ValueError("Data and theta dimensions do not match the circuit")
+    inputs = np.column_stack(
+        (values * np.pi, np.broadcast_to(theta, (len(values), len(theta))))
+    )
+    return adapter.probabilities(inputs, config.batch_size)
 
 
 def fit(X, y, config=None, *, adapter=None):
@@ -36,6 +46,12 @@ def fit(X, y, config=None, *, adapter=None):
         or not np.isfinite(X).all()
     ):
         raise ValueError("Expected finite nonempty X (n, d) and aligned y (n,)")
+    width = config.circuit.num_features
+    if X.shape[1] < width:
+        raise ValueError(
+            "Selected features are fewer than circuit inputs; increase top_k or corr_threshold"
+        )
+    groups = [tuple(range(i, i + width)) for i in range(X.shape[1] - width + 1)]
     rng = np.random.default_rng(config.seed)
 
     def grow(features, labels, depth):
@@ -49,22 +65,25 @@ def fit(X, y, config=None, *, adapter=None):
         ):
             return leaf
         best_score, best = 1.0, None
-        for feature in np.flatnonzero(features.var(axis=0) > 1e-12):
+        active = features.var(axis=0) > 1e-12
+        for group in groups:
+            if not active[list(group)].any():
+                continue
 
-            def probabilities(theta, feature=feature):
-                return run_probabilities(features[:, feature], theta, adapter, config)
+            def probabilities(theta, group=group):
+                return run_probabilities(features[:, group], theta, adapter, config)
 
             split = optimize_split(probabilities, labels, config, rng)
             if split is not None:
                 theta, mask = split
                 score = split_score(mask, labels)
                 if score < best_score:
-                    best_score, best = score, (feature, theta, mask)
+                    best_score, best = score, (group, theta, mask)
         if best is None:
             return leaf
-        feature, theta, mask = best
+        group, theta, mask = best
         return QNode(
-            feature_idx=int(feature),
+            feature_indices=group,
             theta=tuple(float(t) for t in theta),
             left=grow(features[mask], labels[mask], depth + 1),
             right=grow(features[~mask], labels[~mask], depth + 1),
@@ -90,7 +109,7 @@ def predict(X, tree, config=None, *, adapter=None):
         else:
             mask = (
                 run_probabilities(
-                    X[indices, node.feature_idx], node.theta, adapter, config
+                    X[indices][:, node.feature_indices], node.theta, adapter, config
                 )
                 >= 0.5
             )

@@ -3,6 +3,7 @@ import os
 import numpy as np
 from qiskit.quantum_info import Kraus
 
+from ..circuit import ROTATIONS, TWO_GATES
 from . import circuit_array
 from .qiskit_run import gate_error
 
@@ -17,6 +18,7 @@ class Adapter:
             ) from error
         self.runtime = cudaq
         self.config = config
+        self.circuit = config.circuit
         self.calls = self.circuits = 0
         self.rng = np.random.default_rng(config.seed)
         error = gate_error(config)
@@ -45,16 +47,28 @@ class Adapter:
         self.noise = cudaq.NoiseModel()
         if error is not None:
             channel = cudaq.KrausChannel(Kraus(error).data)
-            for gate in ("ry", "rz"):
-                self.noise.add_all_qubit_channel(gate, channel)
-        self.kernel, a, z, b = cudaq.make_kernel(float, float, float)
-        qubit = self.kernel.qalloc(1)[0]
-        self.kernel.ry(a, qubit)
-        self.kernel.rz(z, qubit)
-        self.kernel.ry(b, qubit)
+            pair_channel = cudaq.KrausChannel(Kraus(error.tensor(error)).data)
+            for name in {g[0] for g in self.circuit.operations}:
+                gate, controls = (name[1], 1) if name in {"cx", "cz"} else (name, 0)
+                self.noise.add_all_qubit_channel(
+                    gate, pair_channel if name in TWO_GATES else channel, controls
+                )
+        self.kernel, inputs = cudaq.make_kernel(list)
+        qubits = self.kernel.qalloc(self.circuit.num_qubits)
+        for name, *args in self.circuit.operations:
+            if name in ROTATIONS:
+                wire, angle = args
+                angle = (
+                    inputs[self.circuit.input_indices[angle]]
+                    if isinstance(angle, str)
+                    else float(angle)
+                )
+                getattr(self.kernel, name)(angle, qubits[wire])
+            else:
+                getattr(self.kernel, name)(*(qubits[q] for q in args))
 
     def probabilities(self, circuits, batch_size=1):
-        angles = circuit_array(circuits, batch_size)
+        angles = circuit_array(circuits, batch_size, self.circuit.num_inputs)
         if not len(angles):
             return np.empty(0)
         cudaq = self.runtime
@@ -62,21 +76,25 @@ class Adapter:
         self.calls += 1
         self.circuits += len(angles)
         probabilities = []
-        for a, z, b in angles:
-            arguments = (float(a), float(z), float(b))
+        for row in angles:
+            arguments = row.tolist()
             r = self.config.readout_error
             if self.config.shots:
                 cudaq.set_random_seed(int(self.rng.integers(0, 2**31 - 1)))
                 counts = cudaq.sample(
                     self.kernel,
-                    *arguments,
+                    arguments,
                     shots_count=self.config.shots,
                     noise_model=self.noise,
                 )
                 total = sum(counts.values())
                 if total != self.config.shots:
                     raise RuntimeError("CUDA-Q returned an unexpected number of shots")
-                zeros = counts.count("0")
+                zeros = sum(
+                    count
+                    for bits, count in counts.items()
+                    if bits[self.circuit.readout_qubit] == "0"
+                )
                 if r:
                     zeros = self.rng.binomial(zeros, 1 - r) + self.rng.binomial(
                         total - zeros, r
@@ -85,8 +103,8 @@ class Adapter:
             else:
                 z_value = cudaq.observe(
                     self.kernel,
-                    cudaq.spin.z(0),
-                    *arguments,
+                    cudaq.spin.z(self.circuit.readout_qubit),
+                    arguments,
                     noise_model=self.noise,
                 ).expectation()
                 p = (1 + z_value) / 2
