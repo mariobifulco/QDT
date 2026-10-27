@@ -1,0 +1,11 @@
+{
+  "dataset": "breast_cancer",
+  "backend": "aer",
+  "shots": 1024,
+  "batch_size": 32,
+  "depolarizing": 0.001,
+  "amplitude_damping": 0.002,
+  "readout_error": 0.01,
+  "optimizer": "lbfgs",
+  "max_evals": 100
+}

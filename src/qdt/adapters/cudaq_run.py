@@ -1,43 +1,39 @@
-from __future__ import annotations
+import os
 
 import cudaq
 import numpy as np
 
-from qdt.types import CircuitSpec
 
-cudaq.set_target("nvidia")
+class Adapter:
+    def __init__(self, config):
+        self.config = config
+        self.calls = self.circuits = 0
+        self.rng = np.random.default_rng(config.seed)
+        cudaq.set_target(os.getenv("CUDAQ_TARGET", "nvidia"))
 
-
-def _run_batch(circuits: list[CircuitSpec]) -> list[bool]:
-    if not circuits:
-        return []
-
-    kernel = cudaq.make_kernel()
-    qubits = kernel.qalloc(len(circuits))
-
-    for qubit_index, (feature_angle, theta_z, theta_y) in enumerate(circuits):
-        kernel.ry(feature_angle, qubits[qubit_index])
-        kernel.rz(theta_z, qubits[qubit_index])
-        kernel.ry(theta_y, qubits[qubit_index])
-
-    statevector = np.array(cudaq.get_state(kernel), copy=False)
-    probs = np.abs(statevector) ** 2
-    indices = np.arange(len(probs), dtype=np.int64)
-
-    results: list[bool] = []
-    for qubit_index in range(len(circuits)):
-        mask = ((indices >> qubit_index) & 1) == 0
-        prob_zero = float(np.sum(probs[mask]))
-        results.append(prob_zero >= 0.5)
-
-    return results
-
-
-def stitch_and_run(circuits: list[CircuitSpec], batch_size: int = 1) -> np.ndarray:
-    if batch_size < 1:
-        raise ValueError("batch_size must be >= 1")
-
-    results: list[bool] = []
-    for start in range(0, len(circuits), batch_size):
-        results.extend(_run_batch(circuits[start : start + batch_size]))
-    return np.asarray(results, dtype=bool)
+    def probabilities(self, circuits, batch_size=1):
+        if not 1 <= batch_size <= 20:
+            raise ValueError("CUDA-Q statevector batches must have 1 to 20 qubits")
+        self.calls += 1
+        self.circuits += len(circuits)
+        results = []
+        for start in range(0, len(circuits), batch_size):
+            batch = circuits[start : start + batch_size]
+            kernel = cudaq.make_kernel()
+            qubits = kernel.qalloc(len(batch))
+            for q, (a, z, b) in enumerate(batch):
+                kernel.ry(a, qubits[q])
+                kernel.rz(z, qubits[q])
+                kernel.ry(b, qubits[q])
+            probabilities = np.abs(np.asarray(cudaq.get_state(kernel))) ** 2
+            indices = np.arange(len(probabilities), dtype=np.int64)
+            results.extend(
+                float(probabilities[((indices >> q) & 1) == 0].sum())
+                for q in range(len(batch))
+            )
+        p = np.clip(results, 0, 1)
+        return (
+            self.rng.binomial(self.config.shots, p) / self.config.shots
+            if self.config.shots
+            else p
+        )

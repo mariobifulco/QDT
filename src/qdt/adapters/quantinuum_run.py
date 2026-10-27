@@ -1,41 +1,38 @@
 import numpy as np
 from pytket import Circuit
-from pytket.circuit import OpType
-from pytket.extensions.qiskit import AerBackend, qiskit_to_tk
-
-SHOTS = 100
-MAX_STITCH = 40
+from pytket.extensions.qiskit import AerBackend
 
 
-def stitch_and_run(circuits: list) -> np.ndarray:
-    n_total = len(circuits)
-    n_qubits = MAX_STITCH
-    stitched = Circuit(n_qubits, n_total)
+class Adapter:
+    def __init__(self, config):
+        self.config = config
+        self.calls = self.circuits = 0
+        self.backend = AerBackend()
+        self.backend._qiskit_backend.set_options(method="matrix_product_state")
+        self.rng = np.random.default_rng(config.seed)
 
-    for i, qiskit_circ in enumerate(circuits):
-        target_qubit = i % n_qubits
-        target_bit = i
-        circ = qiskit_to_tk(qiskit_circ)
-        for command in circ.get_commands():
-            if command.op.type != OpType.Measure:
-                stitched.add_gate(
-                    command.op.type, command.op.params, [stitched.qubits[target_qubit]]
-                )
-
-        stitched.Measure(stitched.qubits[target_qubit], stitched.bits[target_bit])
-
-        if (i + n_qubits) < n_total:
-            stitched.add_gate(OpType.Reset, [stitched.qubits[target_qubit]])
-
-    backend = AerBackend()
-    backend._qiskit_backend.set_options(method="matrix_product_state")
-    compiled = backend.get_compiled_circuit(stitched)
-    result = backend.run_circuit(compiled, n_shots=SHOTS)
-    counts = result.get_counts()
-    bit0_counts = [0] * n_total
-    for bitstring, count in counts.items():
-        for i in range(n_total):
-            if bitstring[i] == 0:
-                bit0_counts[i] += count
-
-    return np.array([c >= SHOTS / 2 for c in bit0_counts])
+    def probabilities(self, circuits, batch_size=1):
+        if batch_size < 1:
+            raise ValueError("batch_size must be >= 1")
+        self.calls += 1
+        self.circuits += len(circuits)
+        probabilities = []
+        for start in range(0, len(circuits), batch_size):
+            batch = circuits[start : start + batch_size]
+            qc = Circuit(len(batch), len(batch))
+            for q, (a, z, b) in enumerate(batch):
+                qc.Ry(a / np.pi, q).Rz(z / np.pi, q).Ry(b / np.pi, q).Measure(q, q)
+            compiled = self.backend.get_compiled_circuit(qc, optimisation_level=0)
+            counts = self.backend.run_circuit(
+                compiled,
+                n_shots=self.config.shots,
+                seed=int(self.rng.integers(0, 2**31 - 1)),
+            ).get_counts()
+            total = sum(counts.values())
+            if not total:
+                raise RuntimeError("pytket returned no measurement counts")
+            probabilities.extend(
+                sum(n for bits, n in counts.items() if bits[q] == 0) / total
+                for q in range(len(batch))
+            )
+        return np.asarray(probabilities)

@@ -2,21 +2,16 @@
 name = "qdt"
 version = "0.1.0"
 description = "Reproducible quantum decision tree experiments with noisy simulation"
-readme = "README.md"
 authors = [
     { name = "Mario Bifulco", email = "mario.bifulco@unito.it" }
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "memory-profiler>=0.61.0",
     "qiskit>=2.1.2",
     "qiskit-aer>=0.17.2",
     "numpy>=2.0",
     "scipy>=1.14",
     "scikit-learn>=1.5",
-    "matplotlib>=3.10",
-    "pandas>=2.2",
-    "tqdm>=4.67",
 ]
 
 [project.optional-dependencies]
@@ -26,8 +21,7 @@ iqm = ["iqm-client[qiskit]>=35.0.3"]
 dev = ["ruff>=0.12"]
 
 [project.scripts]
-qdt = "qdt:main"
-qdt-campaign = "qdt.campaign:main"
+qdt = "qdt.__main__:main"
 
 [build-system]
 requires = ["uv_build>=0.12.9,<0.13.0"]

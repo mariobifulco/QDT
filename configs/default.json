@@ -1,0 +1,10 @@
+{
+  "dataset": "iris",
+  "backend": "analytic",
+  "optimizer": "cobyla",
+  "seed": 42,
+  "max_depth": 2,
+  "top_k": 4,
+  "max_evals": 40,
+  "restarts": 2
+}
