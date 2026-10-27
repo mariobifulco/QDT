@@ -1,0 +1,7 @@
+{
+  "dataset": "iris",
+  "backend": "lightning",
+  "optimizer": "lbfgs",
+  "shots": 0,
+  "max_evals": 40
+}

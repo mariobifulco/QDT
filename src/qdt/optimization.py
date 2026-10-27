@@ -50,7 +50,7 @@ class _BudgetReached(Exception):
     pass
 
 
-def optimize_split(probabilities, labels, config, rng):
+def optimize_split(probabilities, labels, config, rng, *, jacobian=None):
     best_score, best = gini(labels), None
     evaluations = 0
     for restart in range(config.restarts):
@@ -67,8 +67,10 @@ def optimize_split(probabilities, labels, config, rng):
             return probabilities(np.asarray(theta) % (2 * np.pi))
 
         def objective(theta, stop_at=stop_at):
-            nonlocal best_score, best
-            required = 5 if config.optimizer == "lbfgs" else 1
+            nonlocal best_score, best, evaluations
+            required = (
+                (2 if jacobian is not None else 5) if config.optimizer == "lbfgs" else 1
+            )
             if evaluations + required > stop_at:
                 raise _BudgetReached
             p = evaluate(theta)
@@ -81,7 +83,11 @@ def optimize_split(probabilities, labels, config, rng):
                 best_score, best = score, (np.asarray(theta) % (2 * np.pi), mask.copy())
             if config.optimizer == "cobyla":
                 return soft_gini(p, labels)[0]
-
+            if jacobian is not None:
+                # One forward evaluation plus one native Jacobian request.
+                evaluations += 1
+                loss, derivative = soft_gini(p, labels)
+                return loss, derivative @ jacobian(np.asarray(theta) % (2 * np.pi))
             return loss_and_gradient(evaluate, theta, labels, nominal=p)
 
         try:

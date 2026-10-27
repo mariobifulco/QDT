@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 iqm = ["iqm-client[qiskit]>=35.0.3"]
+pennylane = ["pennylane>=0.45.1", "pennylane-lightning>=0.45"]
 
 [dependency-groups]
 dev = ["ruff>=0.12"]

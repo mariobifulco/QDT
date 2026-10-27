@@ -7,7 +7,9 @@ import sys
 import tempfile
 import unittest
 from dataclasses import asdict, replace
+from importlib.util import find_spec
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 from sklearn.datasets import load_iris
@@ -186,6 +188,133 @@ class CoreTests(unittest.TestCase):
                 ).returncode,
                 0,
             )
+
+
+@unittest.skipUnless(
+    find_spec("pennylane"), "Install optional dependencies: uv sync --extra pennylane"
+)
+class PennyLaneTests(unittest.TestCase):
+    def test_ideal_and_noise_probabilities_match_reference(self):
+        angles = np.random.default_rng(12).uniform(-3, 3, (7, 3)).tolist()
+        for backend in ("pennylane", "lightning"):
+            config = Config(backend=backend)
+            adapter = get_adapter(config)
+            expected = get_adapter(Config()).probabilities(angles, 3)
+            for batch_size in (1, 3, 8):
+                np.testing.assert_allclose(
+                    adapter.probabilities(angles, batch_size), expected, atol=1e-12
+                )
+        for noise in (
+            {"depolarizing": 1},
+            {"amplitude_damping": 1},
+            {"phase_damping": 1},
+            {"readout_error": 1},
+            {
+                "depolarizing": 0.02,
+                "amplitude_damping": 0.03,
+                "phase_damping": 0.04,
+                "readout_error": 0.05,
+            },
+        ):
+            config = Config(backend="pennylane", **noise)
+            adapter = get_adapter(config)
+            self.assertEqual(adapter.device_name, "default.mixed")
+            expected = get_adapter(replace(config, backend="aer")).probabilities(
+                angles, 3
+            )
+            np.testing.assert_allclose(
+                adapter.probabilities(angles, 3), expected, atol=1e-10
+            )
+
+    def test_native_loss_gradients_match_parameter_shift(self):
+        values, theta = np.linspace(-0.9, 0.9, 7), np.array([0.7, -0.9])
+        labels = np.array([0, 1, 2, 0, 1, 2, 0])
+        configurations = (
+            Config(backend="pennylane"),
+            Config(backend="lightning"),
+            Config(
+                backend="pennylane",
+                depolarizing=0.02,
+                amplitude_damping=0.03,
+                phase_damping=0.04,
+                readout_error=0.05,
+            ),
+        )
+        for config in configurations:
+            adapter = get_adapter(config)
+
+            def probabilities(parameters, config=config, adapter=adapter):
+                return run_probabilities(values, parameters, adapter, config)
+
+            _, derivative = soft_gini(probabilities(theta), labels)
+            expected = loss_and_gradient(probabilities, theta, labels)[1]
+            for batch_size in (1, 3, 8):
+                jacobian = adapter.jacobian(values, theta, batch_size)
+                self.assertEqual(jacobian.shape, (7, 2))
+                np.testing.assert_allclose(derivative @ jacobian, expected, atol=1e-10)
+            self.assertEqual(
+                adapter.diff_method,
+                "adjoint" if config.backend == "lightning" else "backprop",
+            )
+
+    def test_native_training_and_finite_shot_fallback_respect_budget(self):
+        X = np.linspace(0, 1, 40).reshape(-1, 1)
+        y = (X[:, 0] > 0.5).astype(int)
+        for backend, noise in (
+            ("lightning", {}),
+            ("pennylane", {"amplitude_damping": 0.03}),
+        ):
+            for optimizer, shots in (("lbfgs", 0), ("cobyla", 0), ("lbfgs", 128)):
+                config = Config(
+                    backend=backend,
+                    optimizer=optimizer,
+                    shots=shots,
+                    restarts=1,
+                    max_evals=20,
+                    max_depth=1,
+                    top_k=1,
+                    **noise,
+                )
+                adapter = get_adapter(config)
+                with patch.object(
+                    adapter, "jacobian", wraps=adapter.jacobian
+                ) as jacobian:
+                    tree = fit(X, y, config, adapter=adapter)
+                    self.assertIsNotNone(tree.feature_idx)
+                    self.assertLessEqual(adapter.calls, config.max_evals)
+                    self.assertEqual(
+                        jacobian.called, optimizer == "lbfgs" and shots == 0
+                    )
+                    if jacobian.called:
+                        self.assertEqual(adapter.calls, 2 * jacobian.call_count)
+
+    def test_finite_shot_measurements_and_reproducibility(self):
+        angles = [(0, 0, 0), (np.pi, 0, 0), (0.4, 0.6, 0.2), (1.8, 2.4, 1.1)]
+        for config in (
+            Config(backend="lightning", shots=4096),
+            Config(
+                backend="pennylane",
+                shots=4096,
+                depolarizing=0.03,
+                amplitude_damping=0.02,
+                readout_error=0.05,
+            ),
+        ):
+            actual = get_adapter(config).probabilities(angles, 3)
+            np.testing.assert_array_equal(
+                actual, get_adapter(config).probabilities(angles, 3)
+            )
+            expected = get_adapter(
+                replace(config, backend="aer", shots=0)
+            ).probabilities(angles, 3)
+            np.testing.assert_allclose(actual, expected, atol=0.04)
+            with self.assertRaises(ValueError):
+                get_adapter(config).jacobian(np.array([0.2]), np.zeros(2))
+        with self.assertRaises(ValueError):
+            Config(backend="lightning", amplitude_damping=0.01)
+        self.assertEqual(
+            get_adapter(Config(backend="pennylane")).probabilities([]).size, 0
+        )
 
 
 if __name__ == "__main__":

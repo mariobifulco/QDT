@@ -59,7 +59,14 @@ def main(argv=None):
         "train_probability_calls": adapter.calls,
         "train_sample_circuits": adapter.circuits,
     }
-    result["qdt"] = {"train_s": train_s, "predict_s": predict_s}
+    result["qdt"] = {
+        "train_s": train_s,
+        "predict_s": predict_s,
+        "device": getattr(adapter, "device_name", config.backend),
+        "gradient_method": getattr(adapter, "diff_method", "parameter-shift")
+        if config.optimizer == "lbfgs"
+        else None,
+    }
     baseline = DecisionTreeClassifier(
         max_depth=config.max_depth or None,
         min_samples_leaf=config.min_samples_leaf,

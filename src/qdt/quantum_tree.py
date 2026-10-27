@@ -79,7 +79,17 @@ def fit(X, y, config=None, *, adapter=None):
             def probabilities(theta, feature=feature):
                 return run_probabilities(features[:, feature], theta, adapter, config)
 
-            split = optimize_split(probabilities, labels, config, rng)
+            jacobian = None
+            if not config.shots and hasattr(adapter, "jacobian"):
+
+                def jacobian(theta, feature=feature):
+                    return adapter.jacobian(
+                        features[:, feature], theta, config.batch_size
+                    )
+
+            split = optimize_split(
+                probabilities, labels, config, rng, jacobian=jacobian
+            )
             if split is not None:
                 theta, mask = split
                 score = split_score(mask, labels)

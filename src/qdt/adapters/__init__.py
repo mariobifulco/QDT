@@ -8,6 +8,8 @@ def get_adapter(config):
         from .cudaq_run import Adapter
     elif config.backend == "quantinuum":
         from .quantinuum_run import Adapter
+    elif config.backend in {"pennylane", "lightning"}:
+        from .pennylane_run import Adapter
     else:
         from .qiskit_run import Adapter
     return Adapter(config)
