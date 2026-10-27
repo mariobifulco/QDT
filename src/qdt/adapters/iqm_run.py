@@ -56,7 +56,6 @@ class Adapter:
         if not self.capacity:
             raise ValueError("Circuit exceeds IQM backend qubit capacity")
         self.templates = {}
-        self._template(min(config.batch_size, self.capacity))
 
     def _template(self, size):
         if size not in self.templates:

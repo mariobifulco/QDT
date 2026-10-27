@@ -35,7 +35,6 @@ def run_probabilities(values, theta, adapter, config):
 
 def fit(X, y, config=None, *, adapter=None):
     config = config or Config()
-    adapter = adapter or get_adapter(config)
     X, y = np.asarray(X, dtype=float), np.asarray(y)
     if (
         X.ndim != 2
@@ -46,6 +45,8 @@ def fit(X, y, config=None, *, adapter=None):
         or not np.isfinite(X).all()
     ):
         raise ValueError("Expected finite nonempty X (n, d) and aligned y (n,)")
+    if y.dtype.kind not in "biu":
+        raise ValueError("y must contain integer class labels")
     width = config.circuit.num_features
     if X.shape[1] < width:
         raise ValueError(
@@ -55,6 +56,7 @@ def fit(X, y, config=None, *, adapter=None):
     rng = np.random.default_rng(config.seed)
 
     def grow(features, labels, depth):
+        nonlocal adapter
         classes, counts = np.unique(labels, return_counts=True)
         leaf = QNode(value=int(classes[counts.argmax()]))
         if (
@@ -64,6 +66,8 @@ def fit(X, y, config=None, *, adapter=None):
             or not np.any(features.var(axis=0) > 1e-12)
         ):
             return leaf
+        if adapter is None:
+            adapter = get_adapter(config)
         best_score, best = 1.0, None
         active = features.var(axis=0) > 1e-12
         for group in groups:
@@ -94,7 +98,6 @@ def fit(X, y, config=None, *, adapter=None):
 
 def predict(X, tree, config=None, *, adapter=None):
     config = config or Config()
-    adapter = adapter or get_adapter(config)
     X = np.asarray(X, dtype=float)
     if X.ndim != 2 or not np.isfinite(X).all():
         raise ValueError("Expected finite X (n, d)")
@@ -107,9 +110,14 @@ def predict(X, tree, config=None, *, adapter=None):
         if node.value is not None:
             predictions[indices] = node.value
         else:
+            if adapter is None:
+                adapter = get_adapter(config)
             mask = (
                 run_probabilities(
-                    X[indices][:, node.feature_indices], node.theta, adapter, config
+                    X[np.ix_(indices, node.feature_indices)],
+                    node.theta,
+                    adapter,
+                    config,
                 )
                 >= 0.5
             )

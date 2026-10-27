@@ -53,7 +53,8 @@ class Adapter:
                 self.noise.add_all_qubit_channel(
                     gate, pair_channel if name in TWO_GATES else channel, controls
                 )
-        self.kernel, inputs = cudaq.make_kernel(list)
+        self.observable = cudaq.spin.z(self.circuit.readout_qubit)
+        self.kernel, *inputs = cudaq.make_kernel(*([float] * self.circuit.num_inputs))
         qubits = self.kernel.qalloc(self.circuit.num_qubits)
         for name, *args in self.circuit.operations:
             if name in ROTATIONS:
@@ -66,48 +67,55 @@ class Adapter:
                 getattr(self.kernel, name)(angle, qubits[wire])
             else:
                 getattr(self.kernel, name)(*(qubits[q] for q in args))
+        if error is not None:
+            self.kernel.disable_quantum_optimization()
 
     def probabilities(self, circuits, batch_size=1):
         angles = circuit_array(circuits, batch_size, self.circuit.num_inputs)
         if not len(angles):
             return np.empty(0)
         cudaq = self.runtime
-        cudaq.set_target(self.target)
+        if cudaq.get_target().name != self.target:
+            cudaq.set_target(self.target)
         self.calls += 1
         self.circuits += len(angles)
+        r = self.config.readout_error
+        if not self.config.shots:
+            probabilities = []
+            for start in range(0, len(angles), batch_size):
+                batch = angles[start : start + batch_size]
+                results = cudaq.observe(
+                    self.kernel,
+                    self.observable,
+                    *batch.T.tolist(),
+                    noise_model=self.noise,
+                )
+                probabilities.extend(
+                    (1 + result.expectation()) / 2 for result in results
+                )
+            p = np.asarray(probabilities)
+            return np.clip(p * (1 - r) + (1 - p) * r, 0, 1)
         probabilities = []
         for row in angles:
             arguments = row.tolist()
-            r = self.config.readout_error
-            if self.config.shots:
-                cudaq.set_random_seed(int(self.rng.integers(0, 2**31 - 1)))
-                counts = cudaq.sample(
-                    self.kernel,
-                    arguments,
-                    shots_count=self.config.shots,
-                    noise_model=self.noise,
+            cudaq.set_random_seed(int(self.rng.integers(0, 2**31 - 1)))
+            counts = cudaq.sample(
+                self.kernel,
+                *arguments,
+                shots_count=self.config.shots,
+                noise_model=self.noise,
+            )
+            total = sum(counts.values())
+            if total != self.config.shots:
+                raise RuntimeError("CUDA-Q returned an unexpected number of shots")
+            zeros = sum(
+                count
+                for bits, count in counts.items()
+                if bits[self.circuit.readout_qubit] == "0"
+            )
+            if r:
+                zeros = self.rng.binomial(zeros, 1 - r) + self.rng.binomial(
+                    total - zeros, r
                 )
-                total = sum(counts.values())
-                if total != self.config.shots:
-                    raise RuntimeError("CUDA-Q returned an unexpected number of shots")
-                zeros = sum(
-                    count
-                    for bits, count in counts.items()
-                    if bits[self.circuit.readout_qubit] == "0"
-                )
-                if r:
-                    zeros = self.rng.binomial(zeros, 1 - r) + self.rng.binomial(
-                        total - zeros, r
-                    )
-                p = zeros / total
-            else:
-                z_value = cudaq.observe(
-                    self.kernel,
-                    cudaq.spin.z(self.circuit.readout_qubit),
-                    arguments,
-                    noise_model=self.noise,
-                ).expectation()
-                p = (1 + z_value) / 2
-                p = p * (1 - r) + (1 - p) * r
-            probabilities.append(p)
+            probabilities.append(zeros / total)
         return np.clip(probabilities, 0, 1)

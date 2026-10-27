@@ -30,6 +30,23 @@ class Config:
     corr_threshold: float = 0.95
 
     def __post_init__(self):
+        for name in (
+            "seed",
+            "batch_size",
+            "shots",
+            "threads",
+            "max_evals",
+            "restarts",
+            "max_depth",
+            "min_samples_leaf",
+            "max_train_samples",
+            "top_k",
+        ):
+            value = getattr(self, name)
+            if value is None and name in {"max_train_samples", "top_k"}:
+                continue
+            if type(value) is not int:
+                raise ValueError(f"{name} must be an integer")
         if isinstance(self.circuit, dict):
             object.__setattr__(self, "circuit", Circuit(**self.circuit))
         if not isinstance(self.circuit, Circuit):

@@ -17,10 +17,139 @@ from qdt.circuit import Circuit
 from qdt.config import Config
 from qdt.data import DATASET_KEYS, prepare_dataset, select_features
 from qdt.optimization import gini, optimize_split, soft_gini, split_score
-from qdt.quantum_tree import fit, predict, run_probabilities
+from qdt.quantum_tree import QNode, fit, predict, run_probabilities
 
 
 class QDTTests(unittest.TestCase):
+    def test_config_integer_fields_and_labels_are_validated_before_backend_access(self):
+        for name in (
+            "seed",
+            "batch_size",
+            "shots",
+            "threads",
+            "max_evals",
+            "restarts",
+            "max_depth",
+            "min_samples_leaf",
+            "max_train_samples",
+            "top_k",
+        ):
+            for value in (True, 1.5, "2"):
+                with (
+                    self.subTest(name=name, value=value),
+                    self.assertRaises(ValueError),
+                ):
+                    Config(**{name: value})
+        X = np.linspace(-1, 1, 20)[:, None]
+        with patch(
+            "qdt.quantum_tree.get_adapter",
+            side_effect=AssertionError("Backend should not be initialized"),
+        ):
+            for labels in (np.full(20, 0.75), np.full(20, np.nan), np.full(20, "cat")):
+                with self.assertRaises(ValueError):
+                    fit(X, labels)
+            config = Config(backend="iqm", max_depth=0)
+            tree = fit(X, np.zeros(20, dtype=int), config)
+            np.testing.assert_array_equal(
+                predict(X, tree, config), np.zeros(20, dtype=int)
+            )
+            self.assertEqual(predict(np.empty((0, 1)), QNode(value=1), config).size, 0)
+
+    def test_falsey_injected_adapter_is_used(self):
+        class Stub:
+            calls = 0
+
+            def __bool__(self):
+                return False
+
+            def probabilities(self, rows, batch_size):
+                self.calls += 1
+                return np.where(np.asarray(rows)[:, 0] > 0, 0.9, 0.1)
+
+        X = np.linspace(-1, 1, 20)[:, None]
+        labels = (X[:, 0] > 0).astype(int)
+        config = Config(max_depth=1, max_evals=4, restarts=1)
+        adapter = Stub()
+        with patch(
+            "qdt.quantum_tree.get_adapter",
+            side_effect=AssertionError("Injected adapter was discarded"),
+        ):
+            tree = fit(X, labels, config, adapter=adapter)
+            np.testing.assert_array_equal(
+                predict(X, tree, config, adapter=adapter), labels
+            )
+        self.assertGreater(adapter.calls, 0)
+
+    def test_cached_scores_match_direct_impurity_formula(self):
+        from qdt.optimization import _soft_gini, _split_score
+
+        rng = np.random.default_rng(16)
+        for class_count in (2, 3, 8):
+            labels = rng.integers(0, class_count, 200) * 13 - 7
+            _, classes, totals = np.unique(
+                labels, return_inverse=True, return_counts=True
+            )
+            for probabilities in (rng.random(200), np.zeros(200), np.ones(200)):
+                mask = probabilities >= 0.5
+                expected = (
+                    1.0
+                    if mask.all() or not mask.any()
+                    else (
+                        mask.sum() * gini(labels[mask])
+                        + (~mask).sum() * gini(labels[~mask])
+                    )
+                    / len(labels)
+                )
+                self.assertAlmostEqual(
+                    _split_score(mask, classes, totals), expected, places=15
+                )
+                expected_soft = 0.0
+                for weights in (probabilities, 1 - probabilities):
+                    mass = weights.sum()
+                    if mass:
+                        proportions = (
+                            np.array(
+                                [
+                                    weights[labels == cls].sum()
+                                    for cls in np.unique(labels)
+                                ]
+                            )
+                            / mass
+                        )
+                        expected_soft += (
+                            mass / len(labels) * (1 - np.sum(proportions**2))
+                        )
+                self.assertAlmostEqual(
+                    _soft_gini(probabilities, classes), expected_soft, places=14
+                )
+
+    def test_aer_runtime_binding_and_readout_only_use_statevector(self):
+        circuit = Circuit(
+            num_qubits=2,
+            readout_qubit=1,
+            gates=(("ry", 0, "x[0]"), ("cx", 0, 1), ("ry", 1, "theta[0]")),
+        )
+        for shots in (0, 256):
+            adapter = Adapter(Config(circuit=circuit, shots=shots, readout_error=1))
+            self.assertEqual(adapter.device_name, "statevector")
+            with (
+                patch.object(
+                    adapter.template,
+                    "assign_parameters",
+                    side_effect=AssertionError("Per-sample circuit copy"),
+                ),
+                patch.object(adapter.backend, "run", wraps=adapter.backend.run) as run,
+            ):
+                actual = adapter.probabilities([[0, 0], [np.pi, 0]], 64)
+                np.testing.assert_array_equal(actual, [0, 1])
+                self.assertEqual(len(run.call_args.kwargs["parameter_binds"]), 1)
+                self.assertEqual(
+                    len(
+                        next(iter(run.call_args.kwargs["parameter_binds"][0].values()))
+                    ),
+                    2,
+                )
+
     def test_circuit_validation_roundtrip_and_parameter_dimensions(self):
         circuit = Circuit(
             num_qubits=2,

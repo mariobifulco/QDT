@@ -30,6 +30,74 @@ NOISE = {
 
 
 class AdapterTests(unittest.TestCase):
+    @unittest.skipUnless(importlib.util.find_spec("cudaq"), "Install the cudaq extra")
+    @patch.dict(os.environ, CUDAQ_TARGET="density-matrix-cpu")
+    def test_cudaq_randomized_circuits_match_aer(self):
+        rng = np.random.default_rng(125)
+        for size in (1, 2, 3, 4):
+            gates = [("ry", q, f"x[{q}]") for q in range(size)]
+            gates += [("rz", q, f"theta[{q}]") for q in range(size)]
+            gates += [("ry", q, f"theta[{size + q}]") for q in range(size)]
+            gates += [("cx", q, q + 1) for q in range(size - 1)]
+            gates += [
+                ("x", 0),
+                ("x", 0),
+                ("h", 0),
+                ("s", 0),
+                ("t", 0),
+                ("rx", 0, 0.125),
+                ("ry", size - 1, "x[0]"),
+            ]
+            if size > 1:
+                gates += [("cz", 0, size - 1), ("swap", 0, size - 1)]
+            circuit = Circuit(num_qubits=size, readout_qubit=size - 1, gates=gates)
+            rows = rng.uniform(-3, 3, (3, circuit.num_inputs))
+            rows[0] = 0
+            for rates in ({}, {"readout_error": 0.13}, NOISE):
+                with self.subTest(qubits=size, rates=rates):
+                    config = Config(backend="cudaq", circuit=circuit, **rates)
+                    actual = get_adapter(config).probabilities(rows, 2)
+                    expected = AerAdapter(config).probabilities(rows, 2)
+                    np.testing.assert_allclose(actual, expected, atol=1e-11)
+
+    @unittest.skipUnless(importlib.util.find_spec("iqm"), "Install the iqm extra")
+    @patch.dict(os.environ, IQM_BACKEND="fake")
+    def test_iqm_small_call_does_not_compile_unused_full_batch(self):
+        from iqm.qiskit_iqm import transpile_to_IQM
+
+        with patch(
+            "iqm.qiskit_iqm.transpile_to_IQM", wraps=transpile_to_IQM
+        ) as compile_circuit:
+            adapter = get_adapter(Config(backend="iqm", shots=128))
+            self.assertEqual(adapter.templates, {})
+            self.assertEqual(compile_circuit.call_count, 0)
+            adapter.probabilities(ANGLES[:3], 64)
+            self.assertEqual(compile_circuit.call_count, 1)
+            self.assertEqual(set(adapter.templates), {3})
+
+    @unittest.skipUnless(importlib.util.find_spec("cudaq"), "Install the cudaq extra")
+    @patch.dict(os.environ, CUDAQ_TARGET="qpp-cpu")
+    def test_cudaq_exact_observations_are_batched(self):
+        adapter = get_adapter(Config(backend="cudaq"))
+        with patch.object(
+            adapter.runtime, "observe", wraps=adapter.runtime.observe
+        ) as observe:
+            actual = adapter.probabilities(ANGLES, 3)
+            self.assertEqual(observe.call_count, 3)
+        np.testing.assert_allclose(
+            actual, AerAdapter(Config()).probabilities(ANGLES, 3), atol=1e-12
+        )
+
+    @unittest.skipUnless(importlib.util.find_spec("cudaq"), "Install the cudaq extra")
+    @patch.dict(os.environ, CUDAQ_TARGET="density-matrix-cpu")
+    def test_cudaq_noisy_gate_cancellations_keep_all_channels(self):
+        circuit = Circuit(
+            gates=(("ry", 0, "x[0]"), ("rz", 0, "theta[0]"), ("x", 0), ("x", 0))
+        )
+        config = Config(backend="cudaq", circuit=circuit, depolarizing=0.2)
+        actual = get_adapter(config).probabilities([[0, 0]], 64)
+        np.testing.assert_allclose(actual, [(1 + 0.8**4) / 2], atol=1e-12)
+
     @unittest.skipUnless(importlib.util.find_spec("iqm"), "Install the iqm extra")
     @patch.dict(os.environ, IQM_BACKEND="fake")
     def test_iqm_entangled_samples_compile_once_per_batch_shape(self):
@@ -115,7 +183,6 @@ class AdapterTests(unittest.TestCase):
             np.testing.assert_array_equal(
                 actual, get_adapter(sampled).probabilities(rows, 64)
             )
-        # Explicit asymmetric basis states detect reversed bitstring order.
         circuit = Circuit(
             num_qubits=2,
             readout_qubit=1,
@@ -169,7 +236,6 @@ class AdapterTests(unittest.TestCase):
                 AerAdapter(config).probabilities(ANGLES, 64),
             )
             self.assertEqual((adapter.calls, adapter.circuits), (1, len(ANGLES)))
-        # Exercise backend selection through the complete ANOVA/COBYLA CLI.
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             config = root / "config.json"
@@ -240,7 +306,6 @@ class AdapterTests(unittest.TestCase):
         from iqm.qiskit_iqm.fake_backends.fake_garnet import IQMFakeGarnet
 
         backend = IQMFakeGarnet()
-        # Counts use little-endian classical bits: first sample always zero.
         result = SimpleNamespace(success=True, get_counts=lambda: {"10": 10})
         with (
             patch("iqm.qiskit_iqm.IQMProvider") as provider,

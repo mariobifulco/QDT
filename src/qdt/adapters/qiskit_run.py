@@ -33,7 +33,7 @@ class Adapter:
         self.rng = np.random.default_rng(config.seed)
         self.calls = self.circuits = 0
         self.device_name = (
-            "density_matrix" if any(config.noise_rates) else "statevector"
+            "density_matrix" if any(config.noise_rates[:3]) else "statevector"
         )
         noise = NoiseModel(basis_gates=sorted(SINGLE_GATES | TWO_GATES))
         error = gate_error(config)
@@ -48,6 +48,7 @@ class Adapter:
             noise_model=noise,
             max_parallel_threads=config.threads,
             fusion_enable=False,
+            runtime_parameter_bind_enable=True,
         )
         self.template = self.circuit.template.copy()
         if config.shots:
@@ -68,21 +69,20 @@ class Adapter:
         self.circuits += len(circuits)
         probabilities = []
         for start in range(0, len(circuits), batch_size):
-            experiments = [
-                self.template.assign_parameters(
-                    dict(zip(self.circuit.parameters, row, strict=True)),
-                    flat_input=True,
-                )
-                for row in angles[start : start + batch_size]
-            ]
+            batch = angles[start : start + batch_size]
+            bindings = {
+                parameter: batch[:, column].tolist()
+                for column, parameter in enumerate(self.circuit.parameters)
+            }
             result = self.backend.run(
-                experiments,
+                self.template,
+                parameter_binds=[bindings],
                 shots=self.config.shots or 1,
                 seed_simulator=int(self.rng.integers(0, 2**31 - 1)),
             ).result()
             if not result.success:
                 raise RuntimeError(f"Aer simulation failed: {result.status}")
-            for index in range(len(experiments)):
+            for index in range(len(batch)):
                 if self.config.shots:
                     counts = result.get_counts(index)
                     total = sum(counts.values())
