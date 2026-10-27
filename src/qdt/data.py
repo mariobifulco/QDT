@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -12,6 +13,7 @@ from sklearn.datasets import (
     load_wine,
     make_classification,
 )
+from sklearn.feature_selection import f_classif
 from sklearn.model_selection import train_test_split
 
 LOADERS = {
@@ -40,6 +42,7 @@ class PreparedDataset:
     y_train: np.ndarray
     y_test: np.ndarray
     feature_indices: np.ndarray
+    original_dim: int
 
 
 def load_uci(key, data_dir, *, download=False):
@@ -68,6 +71,30 @@ def load_uci(key, data_dir, *, download=False):
     return rows[:, :-1].astype(float), np.array(
         [classes[label] for label in rows[:, -1]]
     )
+
+
+def select_features(X, y, config):
+    active = np.flatnonzero(X.var(axis=0) > 1e-12)
+    if config.top_k is None or not len(active):
+        return active
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        scores = np.nan_to_num(f_classif(X[:, active], y)[0], nan=0)
+    ranking = active[np.argsort(-scores, kind="stable")]
+    centered = X - X.mean(axis=0)
+    norms = np.linalg.norm(centered, axis=0)
+    selected = []
+    for feature in ranking:
+        if selected:
+            correlation = np.abs(centered[:, selected].T @ centered[:, feature]) / (
+                norms[selected] * norms[feature]
+            )
+            if np.any(correlation > config.corr_threshold):
+                continue
+        selected.append(int(feature))
+        if len(selected) == config.top_k:
+            break
+    return selected
 
 
 def prepare_dataset(config):
@@ -106,8 +133,17 @@ def prepare_dataset(config):
         )
     keep = np.flatnonzero(X_train.var(axis=0) > 1e-12)
     if not len(keep):
-        keep = np.array([0])  # Retain a column so a constant dataset can form a leaf.
+        keep = np.array([0])
     scales = np.maximum(np.abs(X_train[:, keep]).max(axis=0), 1e-9)
+    X_train, X_test = X_train[:, keep] / scales, X_test[:, keep] / scales
+    selected = select_features(X_train, y_train, config)
+    if not len(selected):
+        selected = np.array([0])
     return PreparedDataset(
-        X_train[:, keep] / scales, X_test[:, keep] / scales, y_train, y_test, keep
+        X_train[:, selected],
+        X_test[:, selected],
+        y_train,
+        y_test,
+        keep[selected],
+        X.shape[1],
     )

@@ -53,6 +53,8 @@ def main(argv=None):
         "config": asdict(config),
         "tree": asdict(tree),
         "feature_indices": data.feature_indices.tolist(),
+        "original_dim": data.original_dim,
+        "selected_dim": data.X_train.shape[1],
         "y_test": data.y_test.tolist(),
         "train_samples": len(data.y_train),
         "test_samples": len(data.y_test),
@@ -62,17 +64,14 @@ def main(argv=None):
     result["qdt"] = {
         "train_s": train_s,
         "predict_s": predict_s,
-        "device": getattr(adapter, "device_name", config.backend),
-        "gradient_method": getattr(adapter, "diff_method", "parameter-shift")
-        if config.optimizer == "lbfgs"
-        else None,
+        "device": adapter.device_name,
+        "optimizer": "cobyla",
     }
     baseline = DecisionTreeClassifier(
         max_depth=config.max_depth or None,
         min_samples_leaf=config.min_samples_leaf,
         random_state=config.seed,
     )
-    # Depth zero means a leaf for both models.
     if config.max_depth == 0:
         from sklearn.dummy import DummyClassifier
 

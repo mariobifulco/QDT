@@ -1,8 +1,6 @@
-import warnings
 from dataclasses import dataclass
 
 import numpy as np
-from sklearn.feature_selection import f_classif
 
 from .adapters import get_adapter
 from .config import Config
@@ -16,30 +14,6 @@ class QNode:
     left: "QNode | None" = None
     right: "QNode | None" = None
     value: int | None = None
-
-
-def select_features(X, y, config):
-    active = np.flatnonzero(X.var(axis=0) > 1e-12)
-    if config.top_k is None or not len(active):
-        return active
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        scores = np.nan_to_num(f_classif(X[:, active], y)[0], nan=0)
-    ranking = active[np.argsort(-scores, kind="stable")]
-    centered = X - X.mean(axis=0)
-    norms = np.linalg.norm(centered, axis=0)
-    selected = []
-    for feature in ranking:
-        if selected:
-            correlation = np.abs(centered[:, selected].T @ centered[:, feature]) / (
-                norms[selected] * norms[feature]
-            )
-            if np.any(correlation > config.corr_threshold):
-                continue
-        selected.append(int(feature))
-        if len(selected) == config.top_k:
-            break
-    return selected
 
 
 def run_probabilities(values, theta, adapter, config):
@@ -71,25 +45,16 @@ def fit(X, y, config=None, *, adapter=None):
             depth >= config.max_depth
             or len(classes) == 1
             or len(labels) < 2 * config.min_samples_leaf
+            or not np.any(features.var(axis=0) > 1e-12)
         ):
             return leaf
         best_score, best = 1.0, None
-        for feature in select_features(features, labels, config):
+        for feature in np.flatnonzero(features.var(axis=0) > 1e-12):
 
             def probabilities(theta, feature=feature):
                 return run_probabilities(features[:, feature], theta, adapter, config)
 
-            jacobian = None
-            if not config.shots and hasattr(adapter, "jacobian"):
-
-                def jacobian(theta, feature=feature):
-                    return adapter.jacobian(
-                        features[:, feature], theta, config.batch_size
-                    )
-
-            split = optimize_split(
-                probabilities, labels, config, rng, jacobian=jacobian
-            )
+            split = optimize_split(probabilities, labels, config, rng)
             if split is not None:
                 theta, mask = split
                 score = split_score(mask, labels)
@@ -99,7 +64,7 @@ def fit(X, y, config=None, *, adapter=None):
             return leaf
         feature, theta, mask = best
         return QNode(
-            feature_idx=feature,
+            feature_idx=int(feature),
             theta=tuple(float(t) for t in theta),
             left=grow(features[mask], labels[mask], depth + 1),
             right=grow(features[~mask], labels[~mask], depth + 1),

@@ -1,0 +1,11 @@
+{
+  "backend": "cudaq",
+  "dataset": "iris",
+  "seed": 42,
+  "batch_size": 64,
+  "shots": 0,
+  "top_k": 4,
+  "max_depth": 2,
+  "max_evals": 40,
+  "restarts": 2
+}

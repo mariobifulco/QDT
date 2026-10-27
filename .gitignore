@@ -6,8 +6,7 @@ __pycache__
 *.csv
 *.png
 wandb/
-results/iris-wandb/
-results/iris/
+results
 *.pdf
 old_results
 .ruff_cache

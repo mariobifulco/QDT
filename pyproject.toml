@@ -15,8 +15,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-iqm = ["iqm-client[qiskit]>=35.0.3"]
-pennylane = ["pennylane>=0.45.1", "pennylane-lightning>=0.45"]
+iqm = ["iqm-client[qiskit]>=36.0.0"]
+cudaq = [
+    "cudaq>=0.16.0",
+    "cuda-quantum-cu13==0.16.0; sys_platform == 'darwin'",
+]
 
 [dependency-groups]
 dev = ["ruff>=0.12"]
