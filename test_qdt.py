@@ -471,7 +471,7 @@ class QDTTests(unittest.TestCase):
         filenames = {
             "ibm.json",
             "iqm.json",
-            "aqt.json",
+            "custom_noisy.json",
             "aer_noiseless.json",
             "cudaq_noiseless.json",
         }
@@ -485,6 +485,14 @@ class QDTTests(unittest.TestCase):
             self.assertEqual(config.circuit.num_qubits, 2)
         ideal = Config.load(repository / "configs/aer_noiseless.json")
         self.assertEqual(Adapter(ideal).device_name, "statevector")
+        noisy = Config.load(repository / "configs/custom_noisy.json")
+        self.assertIsNone(noisy.fake_qpu)
+        self.assertTrue(all(rate > 0 for rate in noisy.noise_rates))
+        noisy = replace(noisy, shots=0)
+        self.assertEqual(Adapter(noisy).device_name, "density_matrix")
+        angles = np.zeros((1, noisy.circuit.num_inputs))
+        self.assertLess(Adapter(noisy).probabilities(angles)[0], 1)
+        self.assertEqual(Adapter(ideal).probabilities(angles)[0], 1)
         with self.assertRaises(ValueError):
             Config(circuit=TEST_CIRCUIT, backend="pennylane")
 

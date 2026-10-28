@@ -18,7 +18,7 @@
   "min_samples_leaf": 2,
   "max_evals": 100,
   "restarts": 2,
-  "fake_qpu": "ibm:ibm_fez",
+  "fake_qpu": "file:profiles/ibm_fez.json",
   "qpu_layout": null,
   "circuit": {
     "num_qubits": 2,

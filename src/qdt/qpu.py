@@ -8,10 +8,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
-from qiskit.circuit import Measure
 from qiskit.circuit.library import get_standard_gate_name_mapping
 from qiskit.transpiler import InstructionProperties, Target
-from qiskit_aer.noise import NoiseModel, QuantumError, ReadoutError, depolarizing_error
+from qiskit_aer.noise import NoiseModel, QuantumError, ReadoutError
 
 IQM_DEVICES = {"adonis": 5, "apollo": 20, "aphrodite": 54, "garnet": 20, "deneb": 6}
 
@@ -65,20 +64,16 @@ def list_online_ibm():
 
 
 def list_qpus():
-    entries = [
+    return [
         {"name": f"iqm:{name}", "qubits": size, "kind": "library profile"}
         for name, size in IQM_DEVICES.items()
     ]
-    entries.append(
-        {"name": "aqt:offline", "qubits": 20, "kind": "representative basic model"}
-    )
-    return entries
 
 
 def load_profile(selector):
     provider, separator, name = selector.partition(":")
     if not separator or not name:
-        raise ValueError("Use iqm:name, aqt:offline or file:path")
+        raise ValueError("Use iqm:name or file:path")
     if provider == "file":
         return read_profile(name)
     if provider == "ibm":
@@ -110,24 +105,6 @@ def load_profile(selector):
                 "profile_name": backend.error_profile.name,
             },
             backend,
-        )
-    if provider == "aqt" and name in {"offline", "offline_simulator_noise"}:
-        gates = get_standard_gate_name_mapping()
-        target = Target(num_qubits=20)
-        for gate in ("r", "rz", "rxx"):
-            target.add_instruction(gates[gate], {None: None})
-        target.add_instruction(Measure(), {(q,): None for q in range(20)})
-        noise = NoiseModel(basis_gates=["r", "rz", "rxx"])
-        noise.add_all_qubit_quantum_error(depolarizing_error(0.003, 1), "r")
-        noise.add_all_qubit_quantum_error(depolarizing_error(0.01, 2), "rxx")
-        return Profile(
-            target,
-            noise,
-            {
-                "source": "aqt:offline",
-                "kind": "representative basic model",
-                "reference": "https://github.com/qiskit-community/qiskit-aqt-provider/blob/master/qiskit_aqt_provider/aqt_resource.py",
-            },
         )
     raise ValueError(
         f"Unsupported local profile {selector!r}; use --list-qpus or file:path"
@@ -226,8 +203,8 @@ def read_profile(path):
     if data.get("format") != "qdt-qpu-v1":
         raise ValueError("Expected a qdt-qpu-v1 snapshot")
     metadata = data["metadata"]
-    if not metadata.get("source", "").startswith(("ibm:", "iqm:", "aqt:")):
-        raise ValueError("Only IBM, IQM and AQT profiles are supported")
+    if not metadata.get("source", "").startswith(("ibm:", "iqm:")):
+        raise ValueError("Only IBM and IQM profiles are supported")
     if (
         metadata.get("source", "").startswith("ibm:")
         and metadata.get("kind") != "downloaded calibration"

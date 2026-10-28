@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
+from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit_aer.noise import NoiseModel, ReadoutError, depolarizing_error
 
 from qdt.adapters import get_adapter
@@ -19,6 +20,7 @@ from qdt.circuit import Circuit
 from qdt.config import Config
 from qdt.qpu import (
     IQM_DEVICES,
+    Profile,
     _load_credentials,
     fetch_profile,
     list_online_ibm,
@@ -35,12 +37,24 @@ PAIR = Circuit(
 ROWS = np.array([[0, 0], [np.pi, 0], [0.4, 0.8]])
 
 
+def ibm_test_profile():
+    backend = GenericBackendV2(2, basis_gates=["ry", "rz", "cx"], seed=7)
+    noise = NoiseModel()
+    noise.add_all_qubit_quantum_error(depolarizing_error(0.003, 1), "ry")
+    noise.add_all_qubit_quantum_error(depolarizing_error(0.01, 2), "cx")
+    return Profile(
+        backend.target,
+        noise,
+        {"source": "ibm:test", "kind": "downloaded calibration"},
+    )
+
+
 class QPUProfileTests(unittest.TestCase):
-    def test_local_catalog_has_only_iqm_and_aqt(self):
+    def test_local_catalog_has_only_iqm(self):
         with patch("qdt.qpu._ibm_service", side_effect=AssertionError("No network")):
             self.assertEqual(
                 {entry["name"] for entry in list_qpus()},
-                {"aqt:offline", *(f"iqm:{name}" for name in IQM_DEVICES)},
+                {f"iqm:{name}" for name in IQM_DEVICES},
             )
         with self.assertRaisesRegex(ValueError, "snapshots are disabled"):
             load_profile("ibm:torino")
@@ -61,8 +75,6 @@ class QPUProfileTests(unittest.TestCase):
                 self.assertNotIn("UNUSED_PROVIDER_TOKEN", os.environ)
 
     def test_online_ibm_listing_and_fetch_filter_status(self):
-        from qiskit.providers.fake_provider import GenericBackendV2
-
         backend = GenericBackendV2(
             20,
             basis_gates=["rz", "sx", "x", "cx"],
@@ -146,21 +158,28 @@ class QPUProfileTests(unittest.TestCase):
         ):
             with self.subTest(values=values), self.assertRaises(ValueError):
                 Config(**{"circuit": PAIR, **values})
-        for selector in ("unknown:qpu", "ibm:no_such_device", "iqm:unknown", "bad"):
+        for selector in (
+            "unknown:qpu",
+            "aqt:offline",
+            "aqt:offline_simulator_noise",
+            "ibm:no_such_device",
+            "iqm:unknown",
+            "bad",
+        ):
             with self.assertRaises((ValueError, ImportError)):
                 load_profile(selector)
 
-    def test_aqt_snapshot_roundtrip_exact_asymmetric_readout_and_sampling(self):
-        profile = load_profile("aqt:offline")
+    def test_ibm_snapshot_roundtrip_exact_asymmetric_readout_and_sampling(self):
+        profile = ibm_test_profile()
         profile.noise.add_all_qubit_readout_error(
             ReadoutError([[0.93, 0.07], [0.21, 0.79]])
         )
-        config = Config(fake_qpu="aqt:offline", circuit=PAIR)
+        config = Config(fake_qpu="ibm:test", circuit=PAIR)
         with patch("qdt.adapters.qpu_run.load_profile", return_value=profile):
             exact_adapter = get_adapter(config)
         exact = exact_adapter.probabilities(ROWS, 2)
         with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / "aqt.json"
+            path = Path(folder) / "ibm.json"
             write_profile(profile, path)
             with self.assertRaises(FileExistsError):
                 write_profile(profile, path)
@@ -178,10 +197,11 @@ class QPUProfileTests(unittest.TestCase):
                 len(get_adapter(restored).profile_metadata["snapshot_sha256"]), 64
             )
             payload = json.loads(path.read_text())
-            payload["metadata"]["source"] = "other:qpu"
-            path.write_text(json.dumps(payload))
-            with self.assertRaisesRegex(ValueError, "Only IBM, IQM and AQT"):
-                load_profile(f"file:{path}")
+            for source in ("other:qpu", "aqt:offline"):
+                payload["metadata"]["source"] = source
+                path.write_text(json.dumps(payload))
+                with self.assertRaisesRegex(ValueError, "Only IBM and IQM"):
+                    load_profile(f"file:{path}")
 
     @unittest.skipUnless(importlib.util.find_spec("iqm"), "Install iqm extra")
     def test_all_iqm_profiles_local_multiqubit_and_move_noise(self):
@@ -218,13 +238,15 @@ class QPUProfileTests(unittest.TestCase):
 
     def test_cli_local_profile_end_to_end(self):
         with tempfile.TemporaryDirectory() as folder:
+            profile_path = Path(folder) / "ibm.json"
+            write_profile(ibm_test_profile(), profile_path)
             output = Path(folder) / "result.json"
             config = Path(folder) / "config.json"
             config.write_text(
                 json.dumps(
                     {
                         "circuit": asdict(PAIR),
-                        "fake_qpu": "aqt:offline",
+                        "fake_qpu": f"file:{profile_path}",
                         "max_train_samples": 20,
                         "max_evals": 4,
                         "restarts": 1,
@@ -248,7 +270,7 @@ class QPUProfileTests(unittest.TestCase):
                 capture_output=True,
             )
             result = json.loads(output.read_text())
-            self.assertEqual(result["qdt"]["device"], "local:aqt:offline")
+            self.assertEqual(result["qdt"]["device"], "local:ibm:test")
             self.assertEqual(
                 result["qdt"]["noise_profile"]["simulation"], "local Aer density_matrix"
             )

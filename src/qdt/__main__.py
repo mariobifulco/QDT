@@ -23,7 +23,7 @@ def main(argv=None):
     parser.add_argument("--output", type=Path)
     parser.add_argument(
         "--fake-qpu",
-        help="Local QPU model: iqm:name, aqt:offline or file:path (downloaded IBM profile)",
+        help="Local QPU model: iqm:name or file:path (IBM/IQM profile)",
     )
     parser.add_argument(
         "--list-qpus", action="store_true", help="List bundled local QPU models"
