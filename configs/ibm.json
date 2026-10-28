@@ -6,7 +6,7 @@
   "test_size": 0.2,
   "max_train_samples": null,
   "batch_size": 64,
-  "shots": 0,
+  "shots": 1024,
   "threads": 1,
   "depolarizing": 0.0,
   "amplitude_damping": 0.0,
@@ -17,5 +17,21 @@
   "max_depth": 2,
   "min_samples_leaf": 2,
   "max_evals": 100,
-  "restarts": 2
+  "restarts": 2,
+  "fake_qpu": "ibm:ibm_fez",
+  "qpu_layout": null,
+  "circuit": {
+    "num_qubits": 2,
+    "readout_qubit": 0,
+    "gates": [
+      ["ry", 0, "x[0]"],
+      ["ry", 1, "x[1]"],
+      ["rz", 0, "theta[0]"],
+      ["rz", 1, "theta[1]"],
+      ["cx", 1, 0],
+      ["ry", 0, "theta[2]"],
+      ["ry", 1, "theta[3]"],
+      ["cx", 1, 0]
+    ]
+  }
 }
