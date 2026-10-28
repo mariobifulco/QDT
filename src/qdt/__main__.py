@@ -1,4 +1,4 @@
-"""Run one configuration: python -m qdt --config configs/aer_ideale.json."""
+"""Run one configuration: python -m qdt --config configs/aer_noiseless.json."""
 
 import argparse
 import json

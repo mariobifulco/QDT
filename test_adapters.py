@@ -158,10 +158,9 @@ class AdapterTests(unittest.TestCase):
             [
                 sys.executable,
                 "-c",
-                "import sys; from qdt.adapters import get_adapter; from qdt.config import Config; get_adapter(Config.load('configs/aer_ideale.json')); assert 'cudaq' not in sys.modules; assert 'iqm.qiskit_iqm' not in sys.modules",
+                "import sys; from qdt.adapters import get_adapter; from qdt.config import Config; get_adapter(Config.load('configs/aer_noiseless.json')); assert 'cudaq' not in sys.modules; assert 'iqm.qiskit_iqm' not in sys.modules",
             ],
             check=True,
-            capture_output=True,
         )
 
     @unittest.skipUnless(importlib.util.find_spec("cudaq"), "Install the cudaq extra")
