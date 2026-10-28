@@ -6,11 +6,11 @@ import numpy as np
 def get_adapter(config):
     if config.fake_qpu is not None:
         return import_module(".qpu_run", __name__).Adapter(config)
-    module = {"aer": "qiskit_run", "iqm": "iqm_run", "cudaq": "cudaq_run"}
+    module = {"aer": "qiskit_run", "cudaq": "cudaq_run"}
     return import_module(f".{module[config.backend]}", __name__).Adapter(config)
 
 
-def circuit_array(circuits, batch_size, num_inputs=3):
+def circuit_array(circuits, batch_size, num_inputs):
     if not isinstance(batch_size, (int, np.integer)) or batch_size < 1:
         raise ValueError("batch_size must be an integer >= 1")
     if not len(circuits):

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from .adapters import get_adapter
-from .config import Config
 from .optimization import optimize_split, split_score
 
 
@@ -33,8 +32,7 @@ def run_probabilities(values, theta, adapter, config):
     return adapter.probabilities(inputs, config.batch_size)
 
 
-def fit(X, y, config=None, *, adapter=None):
-    config = config or Config()
+def fit(X, y, config, *, adapter=None):
     X, y = np.asarray(X, dtype=float), np.asarray(y)
     if (
         X.ndim != 2
@@ -96,8 +94,7 @@ def fit(X, y, config=None, *, adapter=None):
     return grow(X, y, 0)
 
 
-def predict(X, tree, config=None, *, adapter=None):
-    config = config or Config()
+def predict(X, tree, config, *, adapter=None):
     X = np.asarray(X, dtype=float)
     if X.ndim != 2 or not np.isfinite(X).all():
         raise ValueError("Expected finite X (n, d)")

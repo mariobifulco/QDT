@@ -20,8 +20,8 @@ jobs:
         run: uv run ruff format --check .
       - name: Core regression checks
         run: uv run python -m unittest -v test_qdt
-      - name: Local IQM and CUDA-Q adapter checks
-        run: uv run --extra iqm --extra cudaq python -m unittest -v test_adapters
+      - name: CUDA-Q adapter checks
+        run: uv run --extra cudaq python -m unittest -v test_adapters
       - name: Local QPU profiles and calibration download checks
         run: uv run --extra ibm --extra iqm python -m unittest -v test_qpu
       - name: Validate Slurm scripts

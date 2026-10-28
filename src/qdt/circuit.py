@@ -15,9 +15,9 @@ REFERENCE = re.compile(r"(x|theta)\[(0|[1-9][0-9]*)\]")
 
 @dataclass(frozen=True)
 class Circuit:
-    num_qubits: int = 1
-    readout_qubit: int = 0
-    gates: tuple = (("ry", 0, "x[0]"), ("rz", 0, "theta[0]"), ("ry", 0, "theta[1]"))
+    num_qubits: int
+    readout_qubit: int
+    gates: tuple
 
     def __post_init__(self):
         if type(self.num_qubits) is not int or self.num_qubits < 1:

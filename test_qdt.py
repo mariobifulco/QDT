@@ -19,8 +19,40 @@ from qdt.data import DATASET_KEYS, prepare_dataset, select_features
 from qdt.optimization import gini, optimize_split, soft_gini, split_score
 from qdt.quantum_tree import QNode, fit, predict, run_probabilities
 
+# Explicit architecture used only by analytic regression tests.
+TEST_CIRCUIT = Circuit(
+    num_qubits=1,
+    readout_qubit=0,
+    gates=(("ry", 0, "x[0]"), ("rz", 0, "theta[0]"), ("ry", 0, "theta[1]")),
+)
+
 
 class QDTTests(unittest.TestCase):
+    def test_circuit_definition_is_required_without_implicit_defaults(self):
+        with self.assertRaises(TypeError):
+            Config()
+        with self.assertRaises(TypeError):
+            Circuit()
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "config.json"
+            incomplete = [
+                {
+                    "circuit": {
+                        k: v for k, v in asdict(TEST_CIRCUIT).items() if k != field
+                    }
+                }
+                for field in ("num_qubits", "readout_qubit", "gates")
+            ]
+            for payload in ({}, {"circuit": {}}, *incomplete):
+                path.write_text(json.dumps(payload))
+                with self.subTest(payload=payload), self.assertRaises(TypeError):
+                    Config.load(path)
+        result = subprocess.run(
+            [sys.executable, "-m", "qdt"], capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--config is required", result.stderr)
+
     def test_config_integer_fields_and_labels_are_validated_before_backend_access(self):
         for name in (
             "seed",
@@ -39,7 +71,7 @@ class QDTTests(unittest.TestCase):
                     self.subTest(name=name, value=value),
                     self.assertRaises(ValueError),
                 ):
-                    Config(**{name: value})
+                    Config(circuit=TEST_CIRCUIT, **{name: value})
         X = np.linspace(-1, 1, 20)[:, None]
         with patch(
             "qdt.quantum_tree.get_adapter",
@@ -47,8 +79,8 @@ class QDTTests(unittest.TestCase):
         ):
             for labels in (np.full(20, 0.75), np.full(20, np.nan), np.full(20, "cat")):
                 with self.assertRaises(ValueError):
-                    fit(X, labels)
-            config = Config(backend="iqm", max_depth=0)
+                    fit(X, labels, Config(circuit=TEST_CIRCUIT))
+            config = Config(circuit=TEST_CIRCUIT, fake_qpu="iqm:deneb", max_depth=0)
             tree = fit(X, np.zeros(20, dtype=int), config)
             np.testing.assert_array_equal(
                 predict(X, tree, config), np.zeros(20, dtype=int)
@@ -68,7 +100,7 @@ class QDTTests(unittest.TestCase):
 
         X = np.linspace(-1, 1, 20)[:, None]
         labels = (X[:, 0] > 0).astype(int)
-        config = Config(max_depth=1, max_evals=4, restarts=1)
+        config = Config(circuit=TEST_CIRCUIT, max_depth=1, max_evals=4, restarts=1)
         adapter = Stub()
         with patch(
             "qdt.quantum_tree.get_adapter",
@@ -194,7 +226,7 @@ class QDTTests(unittest.TestCase):
             {"gates": [["unknown", 0]]},
         ):
             with self.subTest(definition=definition), self.assertRaises(ValueError):
-                Circuit(**definition)
+                Circuit(**{**asdict(TEST_CIRCUIT), **definition})
         with self.assertRaises(ValueError):
             Config(circuit=circuit, top_k=1)
 
@@ -295,7 +327,7 @@ class QDTTests(unittest.TestCase):
         angles = np.random.default_rng(4).uniform(-4, 4, (9, 3))
         a, z, b = angles.T
         expected = (1 + np.cos(a) * np.cos(b) - np.sin(a) * np.cos(z) * np.sin(b)) / 2
-        adapter = Adapter(Config())
+        adapter = Adapter(Config(circuit=TEST_CIRCUIT))
         self.assertEqual(adapter.device_name, "statevector")
         for batch in (1, 4, 20):
             np.testing.assert_allclose(
@@ -309,15 +341,18 @@ class QDTTests(unittest.TestCase):
             ({"depolarizing": 1}, [0.5, 0.5, 0.5]),
             ({"amplitude_damping": 1}, [1, 1, 1]),
         ):
-            adapter = Adapter(Config(**noise))
+            adapter = Adapter(Config(circuit=TEST_CIRCUIT, **noise))
             self.assertEqual(adapter.device_name, "density_matrix")
             np.testing.assert_allclose(
                 adapter.probabilities(angles, 2), expected, atol=1e-12
             )
-        ideal = Adapter(Config()).probabilities(angles, 2)
-        inverted = Adapter(Config(readout_error=1)).probabilities(angles, 2)
+        ideal = Adapter(Config(circuit=TEST_CIRCUIT)).probabilities(angles, 2)
+        inverted = Adapter(Config(circuit=TEST_CIRCUIT, readout_error=1)).probabilities(
+            angles, 2
+        )
         np.testing.assert_allclose(inverted, 1 - ideal, atol=1e-12)
         noise = Config(
+            circuit=TEST_CIRCUIT,
             depolarizing=0.02,
             amplitude_damping=0.03,
             phase_damping=0.04,
@@ -329,7 +364,10 @@ class QDTTests(unittest.TestCase):
         np.testing.assert_array_equal(actual, Adapter(sampled).probabilities(angles, 2))
         np.testing.assert_allclose(actual, exact, atol=0.03)
         np.testing.assert_array_equal(
-            Adapter(Config(shots=128)).probabilities(angles[:2], 2), [0, 1]
+            Adapter(Config(circuit=TEST_CIRCUIT, shots=128)).probabilities(
+                angles[:2], 2
+            ),
+            [0, 1],
         )
 
     def test_soft_gini_and_cobyla_budget(self):
@@ -340,7 +378,7 @@ class QDTTests(unittest.TestCase):
             soft_gini(mask.astype(float), labels), split_score(mask, labels)
         )
         self.assertAlmostEqual(soft_gini(np.full(40, 0.5), labels), gini(labels))
-        config = Config(max_evals=9, restarts=2)
+        config = Config(circuit=TEST_CIRCUIT, max_evals=9, restarts=2)
         adapter = Adapter(config)
 
         def probabilities(theta):
@@ -359,12 +397,12 @@ class QDTTests(unittest.TestCase):
         y = np.repeat([0, 1], 100)
         signal = y + rng.normal(0, 0.05, len(y))
         X = np.column_stack([signal, -signal, np.ones(len(y)), rng.normal(size=len(y))])
-        features = select_features(X, y, Config(top_k=2))
+        features = select_features(X, y, Config(circuit=TEST_CIRCUIT, top_k=2))
         self.assertIn(features[0], (0, 1))
         self.assertEqual(features[1], 3)
 
     def test_initial_filter_is_training_only_and_not_repeated_at_nodes(self):
-        config = Config(top_k=2, max_evals=8, restarts=1)
+        config = Config(circuit=TEST_CIRCUIT, top_k=2, max_evals=8, restarts=1)
         with patch("qdt.data.select_features", wraps=select_features) as selector:
             data = prepare_dataset(config)
             first = fit(data.X_train, data.y_train, config)
@@ -397,7 +435,7 @@ class QDTTests(unittest.TestCase):
         self.assertEqual(adapter.calls, 0)
 
     def test_preparation_scaling_and_original_feature_indices(self):
-        config = Config(top_k=None)
+        config = Config(circuit=TEST_CIRCUIT, top_k=None)
         data = prepare_dataset(config)
         raw = load_iris()
         train, test, _, _ = train_test_split(
@@ -410,7 +448,9 @@ class QDTTests(unittest.TestCase):
         scales = np.abs(train).max(axis=0)
         np.testing.assert_allclose(data.X_train, train / scales)
         np.testing.assert_allclose(data.X_test, test / scales)
-        data = prepare_dataset(Config(dataset="breast_cancer", top_k=4))
+        data = prepare_dataset(
+            Config(circuit=TEST_CIRCUIT, dataset="breast_cancer", top_k=4)
+        )
         self.assertEqual(data.original_dim, 30)
         self.assertEqual(data.X_train.shape[1], len(data.feature_indices))
         self.assertLessEqual(len(data.feature_indices), 4)
@@ -428,16 +468,27 @@ class QDTTests(unittest.TestCase):
             {"max_evals": 7},
         ):
             with self.assertRaises(ValueError):
-                Config(**values)
+                Config(circuit=TEST_CIRCUIT, **values)
         repository = Path(__file__).resolve().parent
-        for filename, device in (
-            ("default.json", "statevector"),
-            ("noise.json", "density_matrix"),
-        ):
-            config = Config.load(repository / "configs" / filename)
-            self.assertEqual(Adapter(config).device_name, device)
+        filenames = {
+            "ibm.json",
+            "iqm.json",
+            "aqt.json",
+            "aer_ideale.json",
+            "cudaq_ideale.json",
+        }
+        self.assertEqual(
+            {p.name for p in (repository / "configs").glob("*.json")}, filenames
+        )
+        for filename in filenames:
+            path = repository / "configs" / filename
+            config = Config.load(path)
+            self.assertEqual(set(json.loads(path.read_text())), set(asdict(config)))
+            self.assertEqual(config.circuit.num_qubits, 2)
+        ideal = Config.load(repository / "configs/aer_ideale.json")
+        self.assertEqual(Adapter(ideal).device_name, "statevector")
         with self.assertRaises(ValueError):
-            Config(backend="pennylane")
+            Config(circuit=TEST_CIRCUIT, backend="pennylane")
 
     def test_slurm_and_cli_output_overwrite_protection(self):
         repository = Path(__file__).resolve().parent
@@ -446,7 +497,14 @@ class QDTTests(unittest.TestCase):
             config = root / "run.json"
             config.write_text(
                 json.dumps(
-                    asdict(Config(max_train_samples=40, max_evals=8, restarts=1))
+                    asdict(
+                        Config(
+                            circuit=TEST_CIRCUIT,
+                            max_train_samples=40,
+                            max_evals=8,
+                            restarts=1,
+                        )
+                    )
                 )
             )
             srun = root / "srun"

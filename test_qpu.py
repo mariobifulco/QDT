@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 from contextlib import chdir
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -84,6 +84,7 @@ class QPUProfileTests(unittest.TestCase):
         backend.status = lambda: SimpleNamespace(operational=True)
         with (
             patch("qdt.qpu._ibm_service") as service,
+            patch("qdt.qpu.importlib.metadata.version", return_value="test-version"),
             patch.object(backend, "run") as run,
         ):
             service.return_value.backends.return_value = [
@@ -144,7 +145,7 @@ class QPUProfileTests(unittest.TestCase):
             {"fake_qpu": "iqm:adonis", "circuit": PAIR, "qpu_layout": [0, 0]},
         ):
             with self.subTest(values=values), self.assertRaises(ValueError):
-                Config(**values)
+                Config(**{"circuit": PAIR, **values})
         for selector in ("unknown:qpu", "ibm:no_such_device", "iqm:unknown", "bad"):
             with self.assertRaises((ValueError, ImportError)):
                 load_profile(selector)
@@ -222,6 +223,7 @@ class QPUProfileTests(unittest.TestCase):
             config.write_text(
                 json.dumps(
                     {
+                        "circuit": asdict(PAIR),
                         "fake_qpu": "aqt:offline",
                         "max_train_samples": 20,
                         "max_evals": 4,

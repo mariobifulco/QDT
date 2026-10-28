@@ -8,7 +8,7 @@
 #SBATCH --output=logs/qdt-%A_%a.out
 
 # From the repo root: mkdir -p logs
-# sbatch slurm/run.sbatch configs/default.json results/pilot
+# sbatch slurm/run.sbatch configs/aer_ideale.json results/pilot
 # Override --array, --partition and --account on the sbatch command as needed.
 set -euo pipefail
 : "${SLURM_ARRAY_TASK_ID:?Submit this script as a Slurm array}"

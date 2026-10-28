@@ -1,4 +1,4 @@
-"""Run one configuration: python -m qdt --config configs/default.json."""
+"""Run one configuration: python -m qdt --config configs/aer_ideale.json."""
 
 import argparse
 import json
@@ -39,17 +39,19 @@ def main(argv=None):
 
         print(json.dumps(list_qpus(), indent=2))
         return
-    config = Config.load(args.config) if args.config else Config()
+    config = Config.load(args.config) if args.config else None
+    if args.download_data:
+        for key in UCI:
+            load_uci(key, config.data_dir if config else "datasets", download=True)
+        return
+    if config is None:
+        parser.error("--config is required and must include a circuit definition")
     overrides = {
         key: getattr(args, key)
         for key in ("dataset", "seed", "fake_qpu")
         if getattr(args, key) is not None
     }
     config = replace(config, **overrides)
-    if args.download_data:
-        for key in UCI:
-            load_uci(key, config.data_dir, download=True)
-        return
     if args.output and args.output.exists():
         parser.error(f"Refusing to overwrite {args.output}")
     data = prepare_dataset(config)
