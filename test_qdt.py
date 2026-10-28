@@ -19,7 +19,6 @@ from qdt.data import DATASET_KEYS, prepare_dataset, select_features
 from qdt.optimization import gini, optimize_split, soft_gini, split_score
 from qdt.quantum_tree import QNode, fit, predict, run_probabilities
 
-# Explicit architecture used only by analytic regression tests.
 TEST_CIRCUIT = Circuit(
     num_qubits=1,
     readout_qubit=0,
@@ -312,7 +311,6 @@ class QDTTests(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             fit(X[:, :1], y, config)
-        # A different architecture also supports more than two fitted angles.
         expanded = replace(
             circuit,
             gates=(*circuit.gates, ("rx", 1, "theta[2]"), ("ry", 1, "theta[3]")),
@@ -474,8 +472,8 @@ class QDTTests(unittest.TestCase):
             "ibm.json",
             "iqm.json",
             "aqt.json",
-            "aer_ideale.json",
-            "cudaq_ideale.json",
+            "aer_noiseless.json",
+            "cudaq_noiseless.json",
         }
         self.assertEqual(
             {p.name for p in (repository / "configs").glob("*.json")}, filenames
@@ -485,7 +483,7 @@ class QDTTests(unittest.TestCase):
             config = Config.load(path)
             self.assertEqual(set(json.loads(path.read_text())), set(asdict(config)))
             self.assertEqual(config.circuit.num_qubits, 2)
-        ideal = Config.load(repository / "configs/aer_ideale.json")
+        ideal = Config.load(repository / "configs/aer_noiseless.json")
         self.assertEqual(Adapter(ideal).device_name, "statevector")
         with self.assertRaises(ValueError):
             Config(circuit=TEST_CIRCUIT, backend="pennylane")
