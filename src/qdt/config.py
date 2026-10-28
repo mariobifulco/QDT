@@ -21,6 +21,8 @@ class Config:
     amplitude_damping: float = 0.0
     phase_damping: float = 0.0
     readout_error: float = 0.0
+    fake_qpu: str | None = None  # Bundled provider:name or file:path; always local Aer.
+    qpu_layout: tuple[int, ...] | None = None
     threads: int = 1
     max_evals: int = 100  # Per candidate and node, shared across restarts.
     restarts: int = 2
@@ -53,6 +55,27 @@ class Config:
             raise ValueError("circuit must be a Circuit or its JSON definition")
         if self.backend not in {"aer", "iqm", "cudaq"}:
             raise ValueError("backend must be aer, iqm or cudaq")
+        if self.fake_qpu is not None:
+            if not isinstance(self.fake_qpu, str) or not self.fake_qpu.strip():
+                raise ValueError(
+                    "fake_qpu must be a nonempty provider:name or file:path"
+                )
+            if self.backend != "aer" or any(self.noise_rates):
+                raise ValueError(
+                    "fake_qpu requires backend=aer and custom noise rates=0"
+                )
+        if self.qpu_layout is not None:
+            if (
+                self.fake_qpu is None
+                or not isinstance(self.qpu_layout, (list, tuple))
+                or len(self.qpu_layout) != self.circuit.num_qubits
+                or any(type(q) is not int or q < 0 for q in self.qpu_layout)
+                or len(set(self.qpu_layout)) != len(self.qpu_layout)
+            ):
+                raise ValueError(
+                    "qpu_layout needs one distinct physical qubit per circuit qubit"
+                )
+            object.__setattr__(self, "qpu_layout", tuple(self.qpu_layout))
         if self.dataset not in DATASET_KEYS:
             raise ValueError(f"Unknown dataset: {self.dataset}")
         minimum = self.circuit.num_parameters + 2

@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from dataclasses import asdict, replace
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
@@ -302,22 +301,11 @@ class AdapterTests(unittest.TestCase):
 
     @unittest.skipUnless(importlib.util.find_spec("iqm"), "Install the iqm extra")
     @patch.dict(os.environ, IQM_BACKEND="qpu", IQM_SERVER_URL="https://example.invalid")
-    def test_iqm_qpu_submission_contract_without_network(self):
-        from iqm.qiskit_iqm.fake_backends.fake_garnet import IQMFakeGarnet
-
-        backend = IQMFakeGarnet()
-        result = SimpleNamespace(success=True, get_counts=lambda: {"10": 10})
-        with (
-            patch("iqm.qiskit_iqm.IQMProvider") as provider,
-            patch.object(backend, "run") as run,
-        ):
-            provider.return_value.get_backend.return_value = backend
-            run.return_value.result.return_value = result
-            actual = get_adapter(Config(backend="iqm", shots=10)).probabilities(
-                ANGLES[:2], 64
-            )
-            np.testing.assert_array_equal(actual, [1, 0])
-            self.assertEqual(run.call_args.kwargs, {"shots": 10})
+    def test_iqm_remote_execution_is_disabled(self):
+        with patch("iqm.qiskit_iqm.IQMProvider") as provider:
+            with self.assertRaisesRegex(ValueError, "Only local execution"):
+                get_adapter(Config(backend="iqm", shots=10))
+            provider.assert_not_called()
 
     @unittest.skipUnless(importlib.util.find_spec("cudaq"), "Install the cudaq extra")
     @patch.dict(os.environ, CUDAQ_TARGET="qpp-cpu")

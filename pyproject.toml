@@ -20,6 +20,10 @@ cudaq = [
     "cudaq>=0.16.0",
     "cuda-quantum-cu13==0.16.0; sys_platform == 'darwin'",
 ]
+ibm = [
+    "qiskit-ibm-runtime>=0.43",
+    "python-dotenv>=1.0",
+]
 
 [dependency-groups]
 dev = ["ruff>=0.12"]

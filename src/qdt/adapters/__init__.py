@@ -4,6 +4,8 @@ import numpy as np
 
 
 def get_adapter(config):
+    if config.fake_qpu is not None:
+        return import_module(".qpu_run", __name__).Adapter(config)
     module = {"aer": "qiskit_run", "iqm": "iqm_run", "cudaq": "cudaq_run"}
     return import_module(f".{module[config.backend]}", __name__).Adapter(config)
 

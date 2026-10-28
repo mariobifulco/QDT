@@ -22,15 +22,27 @@ def main(argv=None):
     parser.add_argument("--seed", type=int)
     parser.add_argument("--output", type=Path)
     parser.add_argument(
+        "--fake-qpu",
+        help="Local QPU model: iqm:name, aqt:offline or file:path (downloaded IBM profile)",
+    )
+    parser.add_argument(
+        "--list-qpus", action="store_true", help="List bundled local QPU models"
+    )
+    parser.add_argument(
         "--download-data",
         action="store_true",
         help="Cache UCI datasets before compute jobs",
     )
     args = parser.parse_args(argv)
+    if args.list_qpus:
+        from .qpu import list_qpus
+
+        print(json.dumps(list_qpus(), indent=2))
+        return
     config = Config.load(args.config) if args.config else Config()
     overrides = {
         key: getattr(args, key)
-        for key in ("dataset", "seed")
+        for key in ("dataset", "seed", "fake_qpu")
         if getattr(args, key) is not None
     }
     config = replace(config, **overrides)
@@ -67,6 +79,8 @@ def main(argv=None):
         "device": adapter.device_name,
         "optimizer": "cobyla",
     }
+    if hasattr(adapter, "profile_metadata"):
+        result["qdt"]["noise_profile"] = adapter.profile_metadata
     baseline = DecisionTreeClassifier(
         max_depth=config.max_depth or None,
         min_samples_leaf=config.min_samples_leaf,
