@@ -41,15 +41,21 @@ Methods are `automatic`, `statevector`, and `density_matrix`. Automatic selectio
 
 ## GPU environment
 
-Use a compatible Linux/NVIDIA cluster. Keep its environment separate from local CPU development. The CPU lockfile does not provide GPU support. Follow the official Aer installation documentation linked in the roadmap and verify the distribution against cluster drivers and runtime.
+Use a compatible Linux/NVIDIA cluster. The wheel-based `gpu` extra currently targets Linux x86-64. The default `uv sync --locked` installs the CPU dependency group; CPU and GPU Aer distributions are mutually exclusive. IQM's current Qiskit extra requires the CPU Aer wheel, so use a separate CPU environment for IQM profiles and hardware clients.
 
-1. Create a separate environment, for example `.venv-gpu`.
-2. Install the project and its CPU-pinned dependencies, then replace the standard `qiskit-aer` distribution with a compatible, explicitly pinned `qiskit-aer-gpu` package (or a GPU-enabled source build).
-3. Check the effective environment rather than installing both overlapping Aer distributions. Save the resolved versions/build and GPU runtime details with the campaign.
-4. Run `.venv-gpu/bin/python -m unittest -v test_packing` and confirm the GPU test runs instead of being skipped.
-5. Use `aer_device: GPU` in execution overrides and preserve result metadata. Do not run `uv sync` against the CPU project environment as a way to prepare GPU support.
+On the cluster, create the GPU environment without the default CPU group:
 
-GPU correctness and performance have not been measured on the current CPU-only Mac. Multi-GPU scaling remains a later pilot.
+```sh
+UV_PROJECT_ENVIRONMENT="$PWD/.venv-gpu" uv sync --locked --no-group cpu --extra gpu --python 3.11
+.venv-gpu/bin/python -m unittest -v test_packing
+```
+
+Check the cluster GPU, driver, and CUDA compatibility first. Confirm that the GPU test actually runs rather than being skipped. This route was dependency-resolved for Linux in a dry run; GPU execution has not been validated on this Mac. For other architectures, use a compatible GPU-enabled Aer source build and record its environment separately.
+
+The available GPU wheel uses Aer 0.18.2 while the current IQM-compatible CPU environment uses Aer 0.17.2. Run CPU and GPU reference comparisons inside the same GPU-enabled cluster environment, selecting `aer_device: CPU` or `GPU`, so package versions do not confound the comparison. Do not compare local Mac CPU timing with cluster GPU timing as an accelerator speedup.
+
+Invoke `.venv-gpu/bin/python` directly in Slurm jobs. A default `uv run`/`uv sync` would re-enable the CPU group; when using uv in that environment, preserve `--no-group cpu --extra gpu`. Save the resolved lockfile, installed distribution versions, build/runtime information, and `nvidia-smi` output with the campaign.
+
 
 ## Hardware-profile simulation and execution records
 
@@ -178,3 +184,36 @@ If submission acceptance is uncertain and no job ID was saved, execution stops r
 `max_qpu_shots` counts composite-circuit shots, including all parameter rows; `max_qpu_jobs` counts submission intents. Runtime execution-time limits are per job. Counters distinguish workload shots from newly submitted jobs/shots and recovered jobs. Raw counts, Runtime metadata, and provider job metrics are retained. Archive the journal with results. Local `campaign` orchestration deliberately rejects live IBM runs until per-run remote campaign coordination is implemented; use standalone frozen-model inference for the initial pilot.
 
 Offline regression tests use local BackendSamplerV2 results and mocked IBM services. They validate parameter ordering, recovery, cached results, limits, and ambiguous-submission handling, but do not establish real device compatibility or performance. Relevant IBM references: [Sampler inputs/outputs](https://quantum.cloud.ibm.com/docs/en/guides/sampler-input-output) and [job retrieval](https://docs.quantum.ibm.com/guides/save-jobs).
+
+## NVIDIA GPU jobs on Slurm
+
+`slurm/qdt.sbatch` forwards any implemented qdt command without reconstructing its arguments. It sets native thread environment variables from the CPU allocation and uses `QDT_PYTHON` to select the environment. The existing `slurm/run.sbatch` remains the legacy seeded comparison array.
+
+Create `logs` before submission. Replace the partition/account placeholders with site settings. Example GPU training:
+
+```sh
+mkdir -p logs
+QDT_PYTHON="$PWD/.venv-gpu/bin/python" sbatch --partition GPU_PARTITION --account PROJECT --gpus=1 --cpus-per-task=4 slurm/qdt.sbatch train --config configs/campaigns/cpu_pilot_training.json --aer-device GPU --threads 4 --seed 0 --output results/gpu-pilot/models/seed-0.json
+```
+
+`--aer-device` and `--threads` override only those training execution settings. Keep the model circuit, data, split, and optimizer budget fixed for CPU/GPU comparisons. Choose different output paths for independent initializations.
+
+Run GPU numerical checks inside an allocated GPU job, for example using the site's interactive allocation followed by:
+
+```sh
+srun .venv-gpu/bin/python -m unittest -v test_packing
+nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv
+```
+
+Preserve the hardware output and scheduler logs. Provenance records selected Slurm allocation identifiers and `CUDA_VISIBLE_DEVICES`; actual Aer device metadata remains the execution check.
+
+For a campaign, create a site-specific manifest pointing to models on the cluster's filesystem, with CPU/GPU overrides and explicit limits. Generate its plan on the compute environment, then execute there using the same code/environment:
+
+```sh
+QDT_PYTHON="$PWD/.venv-gpu/bin/python" sbatch --wait --partition GPU_PARTITION --account PROJECT --gpus=1 --cpus-per-task=4 slurm/qdt.sbatch campaign plan --manifest configs/campaigns/YOUR_GPU_MANIFEST.json --output results/gpu-pilot/campaign/plan.json
+QDT_PYTHON="$PWD/.venv-gpu/bin/python" sbatch --partition GPU_PARTITION --account PROJECT --gpus=1 --cpus-per-task=4 slurm/qdt.sbatch campaign run --plan results/gpu-pilot/campaign/plan.json
+```
+
+Create that manifest first. It is not a supplied site configuration. Set `threads` explicitly in its overrides to fit the CPU allocation. A plan resolved on the Mac cannot be used for new cluster runs because source/environment checks and absolute model paths differ. Do not change source or package resolution between planning and execution. Resume by submitting the same run command after a normal interruption; inspect stale claims and budgets as documented earlier.
+
+These commands currently use one coordinator and one allocated GPU. Independent multi-GPU scaling, GPU peak-memory telemetry, and actual site validation remain pending. Run CPU-only IBM inference clients without reserving a GPU unnecessarily. The user currently requests preparation only for these paths: execute experiments locally on CPU and do not submit Slurm or QPU jobs.

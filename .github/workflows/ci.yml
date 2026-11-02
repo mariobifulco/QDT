@@ -25,4 +25,4 @@ jobs:
       - name: Local QPU profiles and calibration download checks
         run: uv run --extra ibm --extra iqm python -m unittest -v test_qpu test_ibm
       - name: Validate Slurm scripts
-        run: bash -n slurm/run.sbatch
+        run: bash -n slurm/run.sbatch && bash -n slurm/qdt.sbatch

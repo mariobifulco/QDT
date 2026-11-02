@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -56,6 +57,18 @@ def provenance():
         "platform": platform.platform(),
         "versions": versions,
         "source_sha256": source.hexdigest(),
+        "allocated_resources": {
+            key: os.environ.get(key)
+            for key in (
+                "SLURM_JOB_ID",
+                "SLURM_ARRAY_TASK_ID",
+                "SLURM_CPUS_PER_TASK",
+                "SLURM_JOB_GPUS",
+                "SLURM_GPUS_ON_NODE",
+                "SLURM_MEM_PER_NODE",
+                "CUDA_VISIBLE_DEVICES",
+            )
+        },
         "lockfile_sha256": hashlib.sha256(lock.read_bytes()).hexdigest()
         if lock.exists()
         else None,
@@ -210,6 +223,8 @@ def main(argv):
         "--output", required=True, type=Path, help="Complete frozen model JSON"
     )
     train.add_argument("--validation-size", type=float)
+    train.add_argument("--aer-device", choices=("CPU", "GPU"))
+    train.add_argument("--threads", type=int)
     train.add_argument(
         "--seed",
         type=int,
@@ -243,7 +258,7 @@ def main(argv):
         config = Config.load(args.config)
         overrides = {
             key: getattr(args, key)
-            for key in ("validation_size", "seed")
+            for key in ("validation_size", "seed", "aer_device", "threads")
             if getattr(args, key) is not None
         }
         config = replace(config, **overrides)

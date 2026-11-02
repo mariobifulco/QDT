@@ -10,6 +10,10 @@ IQM/IBM device profiles.
 Frozen-model inference also supports budgeted IBM hardware execution with durable
 job recovery; see the [experiment guide](docs/experiment_guide.md).
 
+The default uv environment includes Aer CPU. GPU setup uses the separate `gpu`
+extra without the default CPU group; see the experiment guide for NVIDIA/Slurm
+commands. For pip installations, choose `.[cpu]` or `.[gpu]` explicitly.
+
 Install Python 3.11+ and [uv](https://docs.astral.sh/uv/), then run from the project
 directory:
 

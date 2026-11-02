@@ -8,13 +8,14 @@ authors = [
 requires-python = ">=3.11"
 dependencies = [
     "qiskit>=2.1.2",
-    "qiskit-aer>=0.17.2",
     "numpy>=2.0",
     "scipy>=1.14",
     "scikit-learn>=1.5",
 ]
 
 [project.optional-dependencies]
+cpu = ["qiskit-aer>=0.17.2"]
+gpu = ["qiskit-aer-gpu>=0.18.2; sys_platform == 'linux' and platform_machine == 'x86_64'"]
 analysis = ["matplotlib>=3.9"]
 iqm = ["iqm-client[qiskit]>=36.0.0"]
 ibm = [
@@ -24,6 +25,15 @@ ibm = [
 
 [dependency-groups]
 dev = ["ruff>=0.12"]
+cpu = ["qiskit-aer>=0.17.2"]
+
+[tool.uv]
+default-groups = ["dev", "cpu"]
+conflicts = [
+    [{ extra = "cpu" }, { extra = "gpu" }],
+    [{ group = "cpu" }, { extra = "gpu" }],
+    [{ extra = "iqm" }, { extra = "gpu" }],
+]
 
 [project.scripts]
 qdt = "qdt.__main__:main"

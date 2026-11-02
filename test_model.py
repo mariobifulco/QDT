@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -155,6 +156,40 @@ class ModelTests(unittest.TestCase):
             restored.save(Path(folder) / "resaved.json")
             self.assertEqual(
                 Model.load(Path(folder) / "resaved.json").model_id, restored.model_id
+            )
+
+    def test_slurm_workflow_forwards_arguments_and_thread_allocation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            srun, python, capture = root / "srun", root / "python", root / "args.txt"
+            srun.write_text('#!/bin/sh\nexec "$@"\n')
+            python.write_text(
+                '#!/bin/sh\n[ "$OMP_NUM_THREADS" = 3 ] || exit 1\nprintf "%s\\n" "$@" > "$QDT_CAPTURE"\n'
+            )
+            srun.chmod(0o755)
+            python.chmod(0o755)
+            env = {
+                **os.environ,
+                "PATH": str(root) + os.pathsep + os.environ["PATH"],
+                "QDT_PYTHON": str(python),
+                "QDT_CAPTURE": str(capture),
+                "SLURM_CPUS_PER_TASK": "3",
+            }
+            subprocess.run(
+                [
+                    "bash",
+                    "slurm/qdt.sbatch",
+                    "train",
+                    "--config",
+                    "path with spaces.json",
+                ],
+                env=env,
+                check=True,
+                capture_output=True,
+            )
+            self.assertEqual(
+                capture.read_text().splitlines(),
+                ["-m", "qdt", "train", "--config", "path with spaces.json"],
             )
 
     def test_frozen_model_roundtrip_and_training_only_preprocessing(self):

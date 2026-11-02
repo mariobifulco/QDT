@@ -24,8 +24,9 @@ All implementation notes and project documentation are maintained in English. Ea
 | S08 — Preserve old model IDs and add scalable synthetic data | Complete | `feat: scale synthetic data and preserve frozen artifact compatibility` |
 | S09 — Add validation-only fixed-setting selection | Complete offline | `feat: select and apply validation-only fixed execution policies` |
 | S10 — Implement the IBM live QPU adapter and durable job recovery | Implemented; live validation pending | `feat: add budgeted IBM inference with durable job recovery` |
-| S10b — Prepare the NVIDIA Slurm launch path | Next | User identified an NVIDIA Slurm cluster |
-| S11 — GPU/HPC and real-QPU pilots | Pending external resources and budgets | M6–M7 |
+| S10b — Prepare the NVIDIA Slurm launch path | Implemented; cluster validation pending | `feat: prepare isolated Aer GPU environments and Slurm workflows` |
+| S11 — Local CPU noise/profile pilots | Next | User requested CPU-only execution |
+| S11-remote — GPU/HPC and real-QPU pilots | Deferred by user | Prepare code only; no remote jobs |
 | S12 — Confirmatory policy study, final campaign, and paper | Pending scientific evidence | M8–M11 |
 
 Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only. No GPU benchmark or real QPU execution has been performed. Hardware campaigns and empirical claims must remain pending until measured. The pre-existing README and roadmap edits are included in S00.
@@ -49,7 +50,11 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S09: validation-only per-model fixed-setting selection, policy integrity/model matching, measured attempt/bookkeeping cost, and `predict --policy` implemented. Test campaigns and incomplete validation campaigns are rejected. This implements a required baseline, not the proposed adaptive research contribution.
 - S10: IBM SamplerV2 inference, shared ISA/partition compilation, frozen QPY templates, explicit job/shot/runtime limits, durable submission intents/job IDs, result caching, and ambiguous-submission refusal implemented. Offline tests use local sampler results and mocked services; no account was contacted and no QPU job was submitted. Saved-account and environment credential loading are supported. IQM live execution and remote campaign orchestration remain pending.
 - S10 verification: 42 tests passed with one GPU skip; IBM tests submit only to a local sampler behind mocked Runtime services. A wait timeout and temporarily unavailable backend recover the accepted job; cached reads submit no new jobs. Shared compiler regression checks cover IBM and all IQM profiles.
-- Next: S10b NVIDIA Slurm launcher and GPU preflight instructions, then actual GPU/IBM control runs when cluster connection details and a hardware budget/backend are available. No GPU benchmark, real-QPU result, final campaign, adaptive policy, or completed manuscript is claimed. Complete M0's full-text novelty review before confirmatory collection.
+- S10b: default CPU and mutually exclusive GPU dependency routes, Linux GPU dry resolution, generic Slurm command forwarding, train CPU/GPU/thread overrides, and allocation provenance implemented. GPU wheel resolution selects Aer 0.18.2; the IQM-compatible CPU route remains 0.17.2. Compare CPU/GPU inside the same GPU-enabled cluster build, not across these environments. IQM and GPU-wheel extras are intentionally exclusive because IQM pulls the CPU wheel.
+- Read-only IBM discovery on November 2, 2026 confirmed access to `ibm_fez`, `ibm_kingston`, and `ibm_marrakesh`; no QPU jobs were submitted. A specific backend/budget and cluster SSH alias/partition/account/GPU model were requested and remain pending.
+- S10b verification: 44 tests passed with one GPU skip; Linux GPU dependency dry resolution succeeded without installing GPU packages on the Mac. Slurm argument/thread forwarding, shell syntax, lint, formatting, and the earlier 24-run artifact verification pass.
+- Current user instruction: prepare GPU/IBM code but execute computations locally on CPU only. Remote GPU/HPC and QPU jobs are deferred; no further hardware-access or job-budget decision is needed for the current CPU phase.
+- Next: S11 small CPU-only noise/profile campaigns, input limits, and analysis. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
 
 ## 1. Research objective and scope
 
@@ -364,7 +369,7 @@ These are operations to implement, not existing commands. Choose final command n
 ### Completion criteria
 
 - [x] A small local campaign can be interrupted and resumed without losing or overwriting results.
-- [ ] Mocked hardware jobs cover submission, retrieval, failure, and resumption without credentials.
+- [x] Mocked hardware jobs cover submission, retrieval, failure, and resumption without credentials.
 - [ ] The documented CPU example works from a clean checkout with resolved dependencies.
 - [ ] GPU installation and validation instructions work on the intended HPC platform.
 

@@ -2,19 +2,43 @@ version = 1
 revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version < '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
 ]
+conflicts = [[
+    { package = "qdt", extra = "cpu" },
+    { package = "qdt", extra = "gpu" },
+], [
+    { package = "qdt", extra = "gpu" },
+    { package = "qdt", group = "cpu" },
+], [
+    { package = "qdt", extra = "gpu" },
+    { package = "qdt", extra = "iqm" },
+]]
 
 [[package]]
 name = "annotated-types"
@@ -48,7 +72,7 @@ name = "cffi"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz", hash = "sha256:dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be", size = 530807, upload-time = "2026-08-03T21:21:18.939Z" }
 wheels = [
@@ -311,12 +335,16 @@ name = "contourpy"
 version = "1.3.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/58/01/1253e6698a07380cd31a736d248a3f2a50a7c88779a1813da27503cadc2a/contourpy-1.3.3.tar.gz", hash = "sha256:083e12155b210502d0bca491432bb04d56dc3432f95a979b429f2848c3dbe880", size = 13466174, upload-time = "2025-07-26T12:03:12.549Z" }
 wheels = [
@@ -398,18 +426,28 @@ name = "contourpy"
 version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/83/5a/a55177dd22553a277388e8a1b3220e92de91bacb28356cdc73caa240121d/contourpy-1.4.0.tar.gz", hash = "sha256:20156f5a1ac4f8ce02656e39a61e82164a3d359796dc8026f75b062783d500e1", size = 13323726, upload-time = "2026-09-11T19:05:05.808Z" }
 wheels = [
@@ -489,7 +527,7 @@ name = "cryptography"
 version = "50.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9d/af/182eb91b0df3fe75c4d9f26fe70684569566745f6ba7e5c9c73a862c5252/cryptography-50.0.2.tar.gz", hash = "sha256:7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5", size = 880623, upload-time = "2026-09-30T15:30:04.884Z" }
 wheels = [
@@ -551,6 +589,50 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b6/b1/d9121a717e0f893c64bd6ca7702614778d7df2a5c309128a002421788516/cryptography-50.0.2-pp311-pypy311_pp73-manylinux_2_34_x86_64.whl", hash = "sha256:1ba34f04897fcdaa73f74145c25f3ec146fbd56593853e88adc2e811303c5f42", size = 4726322, upload-time = "2026-09-30T15:29:54.263Z" },
     { url = "https://files.pythonhosted.org/packages/36/8b/e6d153808bf353e152abd2fd4d8f09670d956ac78379ac46e60d7efbf04c/cryptography-50.0.2-pp311-pypy311_pp80-macosx_11_0_arm64.whl", hash = "sha256:3dc4fd8058cea1644971207d530e1a03a184a805ffc8ebdddf0599d78a331b81", size = 3873097, upload-time = "2026-09-30T15:29:56.097Z" },
     { url = "https://files.pythonhosted.org/packages/ca/1d/1271f287ff7170ddafc2aad36260c4eec20ccd2fea70f38455e9d56d427b/cryptography-50.0.2-pp311-pypy311_pp80-win_amd64.whl", hash = "sha256:7b75de3c8b3be1cdb1052747c929440c3eea46c1bc2cb8a6e3a48388e9b7b452", size = 3805376, upload-time = "2026-09-30T15:29:58.729Z" },
+]
+
+[[package]]
+name = "cuquantum-cu12"
+version = "24.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "custatevec-cu12" },
+    { name = "cutensornet-cu12" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9f/d9/5bf68b16ed5f2d6de4d2287d7350bc20a8020e09d1652a17040924c118ff/cuquantum_cu12-24.8.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:d06372e23528dbe38ce85e629272a7ea79bf0b123a03b34f0fe3a44664b38fbf", size = 7003, upload-time = "2024-08-09T06:26:49.775Z" },
+    { url = "https://files.pythonhosted.org/packages/27/b6/27bcfff4b063161cb0972c34a9ea9913e2961065b96231e1cb093c022650/cuquantum_cu12-24.8.0-py3-none-manylinux2014_x86_64.whl", hash = "sha256:793a0f1166d882ff1a8ca85da0dcbe7faae8ab8b255c861080cfdb3d151306da", size = 7004, upload-time = "2024-08-09T06:26:51.184Z" },
+]
+
+[[package]]
+name = "custatevec-cu12"
+version = "1.6.0.post1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/30/838d365bdc0c4f560527d70f2208546d0a2f5f3103e1ba86887fc9632f10/custatevec_cu12-1.6.0.post1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:4f38175cb6cb9dfa0008e5109e22bf92eeedd3aad843be3ce27ad41b53318f95", size = 38729577, upload-time = "2024-05-09T22:28:42.36Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/00/af4c0589bbb37ae3f25beaa847937af3dac9d003a4ff7cf70f891c4a1dc0/custatevec_cu12-1.6.0.post1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:0c875981de852091f5f3c040d705b284424171aa5df07f843728ff2fae450016", size = 38720465, upload-time = "2024-05-09T22:28:47.672Z" },
+]
+
+[[package]]
+name = "cutensor-cu12"
+version = "2.8.1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/be/83/984098675edb71655c04e3655fa6a2fec5a90946b6c6ec74721779d418c4/cutensor_cu12-2.8.1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:dc02e56c7b21d2e918134b81d01fe4a037e72356cc9a076cb7d2b76b3e8b62cd", size = 304816155, upload-time = "2026-09-21T20:57:38.173Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/c1/4c6556fa75d0b613710021d428f52115401be32c734a189c698828a319e5/cutensor_cu12-2.8.1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:07193cd98a7132ace004c0cc501756a56dcf8a4b1a611c7804816eae3a03eb75", size = 306587976, upload-time = "2026-09-21T20:58:49.68Z" },
+    { url = "https://files.pythonhosted.org/packages/70/18/9e4ea3cedcbb4f134d28a99b18d291bbc353cbd5316dc7d0f0d71f3473e3/cutensor_cu12-2.8.1-py3-none-win_amd64.whl", hash = "sha256:06de3707b9aac65e174539abdb23ae9a66df3d4a09c9ad4ca394b987d156ce3a", size = 282301100, upload-time = "2026-09-21T21:00:11.27Z" },
+]
+
+[[package]]
+name = "cutensornet-cu12"
+version = "2.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cutensor-cu12" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/52/c64b4586b94dfd9707c6dbef60a6c630e793529b72e851ffd46008fd81dd/cutensornet_cu12-2.5.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:3d0c55b39b5fb0696c7b219f35a8af91c14fc557f836153d2801c4e31bb3fe70", size = 2174364, upload-time = "2024-08-09T06:27:24.598Z" },
+    { url = "https://files.pythonhosted.org/packages/20/4f/d7b09ad0f68c386981cabf917bf9fbcc6ab9de5c1d5a2efd9347c7fe31c9/cutensornet_cu12-2.5.0-py3-none-manylinux2014_x86_64.whl", hash = "sha256:c2937ff3e2fd2fd984e5bb0a098919981c145ce59ada18857e9f7f4923a3e6c8", size = 2236825, upload-time = "2024-08-09T06:27:26.665Z" },
 ]
 
 [[package]]
@@ -804,8 +886,8 @@ dependencies = [
     { name = "iqm-pulla" },
     { name = "iqm-pulse" },
     { name = "iqm-station-control-client" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "packaging" },
     { name = "pydantic" },
     { name = "requests" },
@@ -826,13 +908,13 @@ name = "iqm-data-definitions"
 version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "protobuf" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "scipy-stubs", version = "1.17.1.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy-stubs", version = "1.18.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy-stubs", version = "1.17.1.5", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy-stubs", version = "1.18.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "types-protobuf" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7a/3a/7d7b2123f9a3da2dd1ad38bf3496581640421ead8b08b4307afea05c6d04/iqm_data_definitions-3.1.0.tar.gz", hash = "sha256:60f6314a0cdd8946ac134939eba97336b6a3f02411e5c8968e930dc798c46af9", size = 67913, upload-time = "2026-10-08T14:07:12.228Z" }
@@ -847,8 +929,8 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "iqm-data-definitions" },
     { name = "jinja2" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "requests" },
@@ -875,10 +957,10 @@ dependencies = [
     { name = "iqm-pulse" },
     { name = "iqm-station-control-client" },
     { name = "pylatexenc" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "scipy-stubs", version = "1.17.1.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy-stubs", version = "1.18.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy-stubs", version = "1.17.1.5", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy-stubs", version = "1.18.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "xarray" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b8/ef/66ff222a83395b5e7f68b7700f952a0c2aa9f72e02dff3d656008ebdab68/iqm_pulla-15.0.0.tar.gz", hash = "sha256:be079df8303b1e64ff723d4f65306f8aa846d5527aa1cdd7d9ea99e2f3c1d9f0", size = 143144, upload-time = "2026-10-08T14:07:23.529Z" }
@@ -894,13 +976,13 @@ dependencies = [
     { name = "iqm-data-definitions" },
     { name = "iqm-exa-common" },
     { name = "jinja2" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "python-rapidjson" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "scipy-stubs", version = "1.17.1.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy-stubs", version = "1.18.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy-stubs", version = "1.17.1.5", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy-stubs", version = "1.18.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7d/03/9e42099d01df10d018c0ea50bdeea8ee2767adfa23106463c3ceb1d24f22/iqm_pulse-15.0.0.tar.gz", hash = "sha256:765f8c5eaa46cd18f28cfa6035aaa229941a0e69711c7cbfa64211a11ce0ca61", size = 424586, upload-time = "2026-10-08T14:07:27.782Z" }
@@ -1230,13 +1312,13 @@ name = "matplotlib"
 version = "3.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "contourpy", version = "1.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "contourpy", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "contourpy", version = "1.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "contourpy", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "cycler" },
     { name = "fonttools" },
     { name = "kiwisolver" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "packaging" },
     { name = "pillow" },
     { name = "pyparsing" },
@@ -1324,9 +1406,13 @@ name = "numpy"
 version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d0/ad/fed0499ce6a338d2a03ebae59cd15093910c8875328855781952abf6c2fe/numpy-2.4.6.tar.gz", hash = "sha256:f3a3570c4a2a16746ac2c31a7c7c7b0c186b95ce902e33db6f28094ed7387dda", size = 20735807, upload-time = "2026-05-18T23:37:14.07Z" }
 wheels = [
@@ -1408,15 +1494,25 @@ name = "numpy"
 version = "2.5.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/13/01/11703282db468b85f6f7b8c7f22d058de5970d5c7e60a3a8aaa313c3de36/numpy-2.5.3.tar.gz", hash = "sha256:df2d5874ff183595a4ba404edd04f6bd9b5505c1d7708573f6a6c17489a67563", size = 20791231, upload-time = "2026-09-06T16:27:47.073Z" }
 wheels = [
@@ -1497,7 +1593,7 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/5f/29fd5f29b0a5d96e2def96ecba3112fc330ecd16e8c97c2b332563c5e201/numpy_typing_compat-20251206.2.4.tar.gz", hash = "sha256:59882d23aaff054a2536da80564012cdce33487657be4d79c5925bb8705fcabc", size = 5011, upload-time = "2025-12-06T20:02:04.942Z" }
 wheels = [
@@ -1520,11 +1616,81 @@ resolution-markers = [
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/08/db/5cd1d99caea4bf39fd477686ded4b9b70dff3c7673b5d84ef2d96a4f5aab/numpy_typing_compat-20260602.2.5.tar.gz", hash = "sha256:1885a678e9a24564839ed5d1711c0031735fb7de7f0b5ed88d550e5d45a8d4f9", size = 4593, upload-time = "2026-06-02T15:52:39.331Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b1/a4/9376b38b7387a0296b1f626b966e5503578625c9673777db1b45bf70acb0/numpy_typing_compat-20260602.2.5-py3-none-any.whl", hash = "sha256:21ba7757c8924d359a9ed3ab2163c282a70983ae64498fdba6d1892a6641c8b1", size = 5881, upload-time = "2026-06-02T15:52:34.167Z" },
+]
+
+[[package]]
+name = "nvidia-cublas-cu12"
+version = "12.9.3.13"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nvidia-cuda-nvrtc-cu12" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b9/19/1683e1b11352d03a8b1ab8a57fccec7064bfaaf862e7206331538e7fd6a1/nvidia_cublas_cu12-12.9.3.13-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:918a8781956115d34b1db49e0e7b7befba8d101661c4b560ed4d42e0e17bebc3", size = 574997333, upload-time = "2026-10-30T21:28:11.255Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/ea/9b6c36aef90766eebb4763aded157039e797ae9789c9c216e960d1d3cd47/nvidia_cublas_cu12-12.9.3.13-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:d7d51055f161b317c7105ddaae90e71eda059026074ffef93cf7cde2886bfe72", size = 581217458, upload-time = "2026-10-30T21:29:02.439Z" },
+]
+
+[[package]]
+name = "nvidia-cuda-nvrtc-cu12"
+version = "12.9.86"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/85/e4af82cc9202023862090bfca4ea827d533329e925c758f0cde964cb54b7/nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl", hash = "sha256:210cf05005a447e29214e9ce50851e83fc5f4358df8b453155d5e1918094dcb4", size = 89568129, upload-time = "2025-06-05T20:02:41.973Z" },
+    { url = "https://files.pythonhosted.org/packages/64/eb/c2295044b8f3b3b08860e2f6a912b702fc92568a167259df5dddb78f325e/nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:096d4de6bda726415dfaf3198d4f5c522b8e70139c97feef5cd2ca6d4cd9cead", size = 44528905, upload-time = "2025-06-05T20:02:29.754Z" },
+    { url = "https://files.pythonhosted.org/packages/52/de/823919be3b9d0ccbf1f784035423c5f18f4267fb0123558d58b813c6ec86/nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-win_amd64.whl", hash = "sha256:72972ebdcf504d69462d3bcd67e7b81edd25d0fb85a2c46d3ea3517666636349", size = 76408187, upload-time = "2025-06-05T20:12:27.819Z" },
+]
+
+[[package]]
+name = "nvidia-cuda-runtime-cu12"
+version = "12.9.79"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bc/e0/0279bd94539fda525e0c8538db29b72a5a8495b0c12173113471d28bce78/nvidia_cuda_runtime_cu12-12.9.79-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:83469a846206f2a733db0c42e223589ab62fd2fabac4432d2f8802de4bded0a4", size = 3515012, upload-time = "2025-06-05T20:00:35.519Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/46/a92db19b8309581092a3add7e6fceb4c301a3fd233969856a8cbf042cd3c/nvidia_cuda_runtime_cu12-12.9.79-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:25bba2dfb01d48a9b59ca474a1ac43c6ebf7011f1b0b8cc44f54eb6ac48a96c3", size = 3493179, upload-time = "2025-06-05T20:00:53.735Z" },
+    { url = "https://files.pythonhosted.org/packages/59/df/e7c3a360be4f7b93cee39271b792669baeb3846c58a4df6dfcf187a7ffab/nvidia_cuda_runtime_cu12-12.9.79-py3-none-win_amd64.whl", hash = "sha256:8e018af8fa02363876860388bd10ccb89eb9ab8fb0aa749aaf58430a9f7c4891", size = 3591604, upload-time = "2025-06-05T20:11:17.036Z" },
+]
+
+[[package]]
+name = "nvidia-cusolver-cu12"
+version = "11.7.5.82"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nvidia-cublas-cu12" },
+    { name = "nvidia-cusparse-cu12" },
+    { name = "nvidia-nvjitlink-cu12" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/99/686ff9bf3a82a531c62b1a5c614476e8dfa24a9d89067aeedf3592ee4538/nvidia_cusolver_cu12-11.7.5.82-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:62efa83e4ace59a4c734d052bb72158e888aa7b770e1a5f601682f16fe5b4fd2", size = 337869834, upload-time = "2025-06-05T20:06:53.125Z" },
+    { url = "https://files.pythonhosted.org/packages/33/40/79b0c64d44d6c166c0964ec1d803d067f4a145cca23e23925fd351d0e642/nvidia_cusolver_cu12-11.7.5.82-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:15da72d1340d29b5b3cf3fd100e3cd53421dde36002eda6ed93811af63c40d88", size = 338117415, upload-time = "2025-06-05T20:07:16.809Z" },
+    { url = "https://files.pythonhosted.org/packages/32/5d/feb7f86b809f89b14193beffebe24cf2e4bf7af08372ab8cdd34d19a65a0/nvidia_cusolver_cu12-11.7.5.82-py3-none-win_amd64.whl", hash = "sha256:77666337237716783c6269a658dea310195cddbd80a5b2919b1ba8735cec8efd", size = 326215953, upload-time = "2025-06-05T20:14:41.76Z" },
+]
+
+[[package]]
+name = "nvidia-cusparse-cu12"
+version = "12.5.10.65"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nvidia-nvjitlink-cu12" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/6f/8710fbd17cdd1d0fc3fea7d36d5b65ce1933611c31e1861da330206b253a/nvidia_cusparse_cu12-12.5.10.65-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:221c73e7482dd93eda44e65ce567c031c07e2f93f6fa0ecd3ba876a195023e83", size = 366359408, upload-time = "2025-06-05T20:07:42.501Z" },
+    { url = "https://files.pythonhosted.org/packages/12/46/b0fd4b04f86577921feb97d8e2cf028afe04f614d17fb5013de9282c9216/nvidia_cusparse_cu12-12.5.10.65-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:73060ce019ac064a057267c585bf1fd5a353734151f87472ff02b2c5c9984e78", size = 366465088, upload-time = "2025-06-05T20:08:20.413Z" },
+    { url = "https://files.pythonhosted.org/packages/73/ef/063500c25670fbd1cbb0cd3eb7c8a061585b53adb4dd8bf3492bb49b0df3/nvidia_cusparse_cu12-12.5.10.65-py3-none-win_amd64.whl", hash = "sha256:9e487468a22a1eaf1fbd1d2035936a905feb79c4ce5c2f67626764ee4f90227c", size = 362504719, upload-time = "2025-06-05T20:15:17.947Z" },
+]
+
+[[package]]
+name = "nvidia-nvjitlink-cu12"
+version = "12.9.86"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/0c/c75bbfb967457a0b7670b8ad267bfc4fffdf341c074e0a80db06c24ccfd4/nvidia_nvjitlink_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl", hash = "sha256:e3f1171dbdc83c5932a45f0f4c99180a70de9bd2718c1ab77d14104f6d7147f9", size = 39748338, upload-time = "2025-06-05T20:10:25.613Z" },
+    { url = "https://files.pythonhosted.org/packages/97/bc/2dcba8e70cf3115b400fef54f213bcd6715a3195eba000f8330f11e40c45/nvidia_nvjitlink_cu12-12.9.86-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:994a05ef08ef4b0b299829cde613a424382aff7efb08a7172c1fa616cc3af2ca", size = 39514880, upload-time = "2025-06-05T20:10:04.89Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/7e/2eecb277d8a98184d881fb98a738363fd4f14577a4d2d7f8264266e82623/nvidia_nvjitlink_cu12-12.9.86-py3-none-win_amd64.whl", hash = "sha256:cc6fcec260ca843c10e34c936921a1c426b351753587fdd638e8cff7b16bb9db", size = 35584936, upload-time = "2025-06-05T20:16:08.525Z" },
 ]
 
 [[package]]
@@ -1619,7 +1785,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "googleapis-common-protos" },
     { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-http-transport", extra = ["requests"] },
+    { name = "opentelemetry-exporter-http-transport", extra = ["requests"], marker = "extra == 'extra-3-qdt-cpu' or extra != 'extra-3-qdt-gpu' or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "opentelemetry-exporter-otlp-common" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-proto" },
@@ -1681,7 +1847,7 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "typing-extensions" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9b/86/e6f1f6f3487492dfcf3b7a2d4e2534d27af6ac05b364b276706906c34865/optype-0.17.1.tar.gz", hash = "sha256:07bfa32b795dea28fba8605a6288d36370d072f25183fb9c29b5a90f4b6f5638", size = 53572, upload-time = "2026-05-17T22:13:28.725Z" }
 wheels = [
@@ -1690,8 +1856,8 @@ wheels = [
 
 [package.optional-dependencies]
 numpy = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
-    { name = "numpy-typing-compat", version = "20251206.2.4", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy-typing-compat", version = "20251206.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
 ]
 
 [[package]]
@@ -1710,7 +1876,7 @@ resolution-markers = [
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version == '3.12.*'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/51/cc/ab0d908a4fd70493628cde3ce0f809c2b0d69b645af52202da4f1b0aeea3/optype-0.19.0.tar.gz", hash = "sha256:50ce4c0ca419026eeae4130dc90c6a0b9a0b54ffe1d940fc26e8d0058903de4c", size = 116633, upload-time = "2026-10-02T23:14:27.141Z" }
 wheels = [
@@ -1719,8 +1885,8 @@ wheels = [
 
 [package.optional-dependencies]
 numpy = [
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" } },
-    { name = "numpy-typing-compat", version = "20260602.2.5", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy-typing-compat", version = "20260602.2.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 
 [[package]]
@@ -1737,8 +1903,8 @@ name = "pandas"
 version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "python-dateutil" },
     { name = "tzdata", marker = "sys_platform == 'emscripten' or sys_platform == 'win32'" },
 ]
@@ -2150,7 +2316,7 @@ version = "0.12.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
-    { name = "sspilib", marker = "sys_platform == 'win32'" },
+    { name = "sspilib", marker = "sys_platform == 'win32' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4b/58/d7c9cfdf1394a8b4d85ac488888814b28d26c4bd732191bd4169687cbfdd/pyspnego-0.12.4.tar.gz", hash = "sha256:acb314d6ca5c9ce87994b1eebbe2d8b687e0d564f9d650b306afb4c8f9c2ffd5", size = 235376, upload-time = "2026-10-06T03:46:23.105Z" }
 wheels = [
@@ -2315,29 +2481,38 @@ wheels = [
 name = "qdt"
 version = "0.1.0"
 source = { editable = "." }
+default-groups = ["cpu", "dev"]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "qiskit" },
-    { name = "qiskit-aer" },
     { name = "scikit-learn" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 
 [package.optional-dependencies]
 analysis = [
     { name = "matplotlib" },
 ]
+cpu = [
+    { name = "qiskit-aer" },
+]
+gpu = [
+    { name = "qiskit-aer-gpu", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+]
 ibm = [
     { name = "python-dotenv" },
     { name = "qiskit-ibm-runtime" },
 ]
 iqm = [
-    { name = "iqm-client", extra = ["qiskit"] },
+    { name = "iqm-client", extra = ["qiskit"], marker = "extra == 'extra-3-qdt-cpu' or extra != 'extra-3-qdt-gpu' or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 
 [package.dev-dependencies]
+cpu = [
+    { name = "qiskit-aer" },
+]
 dev = [
     { name = "ruff" },
 ]
@@ -2349,14 +2524,16 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0" },
     { name = "python-dotenv", marker = "extra == 'ibm'", specifier = ">=1.0" },
     { name = "qiskit", specifier = ">=2.1.2" },
-    { name = "qiskit-aer", specifier = ">=0.17.2" },
+    { name = "qiskit-aer", marker = "extra == 'cpu'", specifier = ">=0.17.2" },
+    { name = "qiskit-aer-gpu", marker = "platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'gpu'", specifier = ">=0.18.2" },
     { name = "qiskit-ibm-runtime", marker = "extra == 'ibm'", specifier = ">=0.43" },
     { name = "scikit-learn", specifier = ">=1.5" },
     { name = "scipy", specifier = ">=1.14" },
 ]
-provides-extras = ["analysis", "iqm", "ibm"]
+provides-extras = ["cpu", "gpu", "analysis", "iqm", "ibm"]
 
 [package.metadata.requires-dev]
+cpu = [{ name = "qiskit-aer", specifier = ">=0.17.2" }]
 dev = [{ name = "ruff", specifier = ">=0.12" }]
 
 [[package]]
@@ -2365,11 +2542,11 @@ version = "2.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dill" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "rustworkx" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "stevedore" },
     { name = "typing-extensions" },
 ]
@@ -2389,13 +2566,13 @@ name = "qiskit-aer"
 version = "0.17.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "psutil" },
     { name = "python-dateutil" },
     { name = "qiskit" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/07/6c/6b8b35f67159401580665c59ae64d676bef9e85aac4d2a50831cbe32f652/qiskit_aer-0.17.2.tar.gz", hash = "sha256:134eef8e509311955a15be543d2ba368f988f3583a2bc1f548af3196da820eb4", size = 6551618, upload-time = "2025-09-17T13:55:25.165Z" }
 wheels = [
@@ -2429,13 +2606,40 @@ wheels = [
 ]
 
 [[package]]
+name = "qiskit-aer-gpu"
+version = "0.18.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cuquantum-cu12" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "nvidia-cublas-cu12" },
+    { name = "nvidia-cuda-runtime-cu12" },
+    { name = "nvidia-cusolver-cu12" },
+    { name = "nvidia-cusparse-cu12" },
+    { name = "nvidia-nvjitlink-cu12" },
+    { name = "psutil" },
+    { name = "python-dateutil" },
+    { name = "qiskit" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/c5/dada90f9d7323969c51fa4dd9fb8ee55cff6982c12be2f2fbf683522af61/qiskit_aer_gpu-0.18.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c07cc487f95f6d8f130a6e9a5b1dc75635f072a6f84d18a3dc66b187f0813bc8", size = 20486303, upload-time = "2026-10-26T20:31:32.526Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/57/74fef197ce68d19f53d98e8d389771689573105b820487383f6075e26831/qiskit_aer_gpu-0.18.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:174e18e674d0e6e3c249b94db51653995342a17e7a826eb598f1041eab7d89db", size = 20487890, upload-time = "2026-10-26T20:31:36.089Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/5e/918b07a4b19a70335d3d5b9f4587181a356c178d28ab28f74698d2e829f6/qiskit_aer_gpu-0.18.2-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d3e682a5bf59f22dbf90cabefac81c431aa0b98b4c103bbbb1022cd5f5fa5468", size = 20488136, upload-time = "2026-10-26T20:31:39.821Z" },
+    { url = "https://files.pythonhosted.org/packages/be/a9/94c7281d813215e07cf1f1768b4985423d12cc2e0262ff74321f01789e3b/qiskit_aer_gpu-0.18.2-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3d5444a2450902d1b5677eee024aaf68680b2743a67d98f831b43cd63e675f7b", size = 20488721, upload-time = "2026-10-26T20:31:45.296Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/31/547d35cb99ba4b3d8ab814a0578cac6afe899cb56752f2ddda58b2a4decc/qiskit_aer_gpu-0.18.2-cp315-cp315-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:285e1690543472eed5cc0387f38d6056d0918ba92f04c580fe2834b85cb470c4", size = 20488544, upload-time = "2026-10-26T20:31:50.461Z" },
+]
+
+[[package]]
 name = "qiskit-ibm-runtime"
 version = "0.45.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ibm-platform-services" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "packaging" },
     { name = "pydantic" },
     { name = "python-dateutil" },
@@ -2517,8 +2721,8 @@ name = "rustworkx"
 version = "0.18.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/86/0d/5b6b48005bbc19622ea7f295f2d5f1339474cb7893e57fd30e6553b2b534/rustworkx-0.18.1.tar.gz", hash = "sha256:30affe6ee52a6257a01152418f9c1686ca114e7ab4a3bf87bb87fe35b7350f3e", size = 896598, upload-time = "2026-07-30T00:19:08.074Z" }
 wheels = [
@@ -2549,10 +2753,10 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "joblib" },
     { name = "narwhals" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "threadpoolctl" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d2/eb/eaf5e07fcc0da7149b0e084f24e54edd7441b9a89ce7e034032ae97fe3a0/scikit_learn-1.9.1.tar.gz", hash = "sha256:629cada3e33e2b9bf376cdc7614a47a4140b8aedc1d836579e359736fbd82977", size = 7786908, upload-time = "2026-09-10T18:34:04.679Z" }
@@ -2606,12 +2810,16 @@ name = "scipy"
 version = "1.17.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7a/97/5a3609c4f8d58b039179648e62dd220f89864f56f7357f5d4f45c29eb2cc/scipy-1.17.1.tar.gz", hash = "sha256:95d8e012d8cb8816c226aef832200b1d45109ed4464303e997c5b13122b297c0", size = 30573822, upload-time = "2026-02-23T00:26:24.851Z" }
 wheels = [
@@ -2682,18 +2890,28 @@ name = "scipy"
 version = "1.18.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'win32'",
-    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and extra != 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu' and extra != 'extra-3-qdt-iqm' and extra != 'group-3-qdt-cpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-3-qdt-cpu' and extra != 'extra-3-qdt-gpu'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7e/74/66de6258867beb2ef08f35f9f2ac017a52cacd5081714d239ff1a442d458/scipy-1.18.1.tar.gz", hash = "sha256:52c4b7422442aba924d03ad4019852b08a92e64ea187b933135687bfe2747307", size = 30781235, upload-time = "2026-08-21T23:28:50.599Z" }
 wheels = [
@@ -2769,7 +2987,7 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "optype", version = "0.17.1", source = { registry = "https://pypi.org/simple" }, extra = ["numpy"] },
+    { name = "optype", version = "0.17.1", source = { registry = "https://pypi.org/simple" }, extra = ["numpy"], marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/02/30/7a2e621918d1317ab972f797161131f2635648ad5d92baf0695dd009e4f9/scipy_stubs-1.17.1.5.tar.gz", hash = "sha256:284b1dd1dd46107a614971d170030d310cd88b2ac6b483f85285ee0ff87720bd", size = 399933, upload-time = "2026-05-25T21:34:33.6Z" }
 wheels = [
@@ -2792,7 +3010,7 @@ resolution-markers = [
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "optype", version = "0.19.0", source = { registry = "https://pypi.org/simple" }, extra = ["numpy"] },
+    { name = "optype", version = "0.19.0", source = { registry = "https://pypi.org/simple" }, extra = ["numpy"], marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/dc/76/13f1b922b32ec866389b6f359cf6c29bdb74726df130f0a23a95c72486c1/scipy_stubs-1.18.1.1.tar.gz", hash = "sha256:87995ba945f04a3c3fb9cdb5c06d093cf3637ca1271ae6799eb8030b63fb2263", size = 460131, upload-time = "2026-09-20T22:37:38.617Z" }
 wheels = [
@@ -2814,12 +3032,24 @@ version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0d/70/946df678028019b3bbdd6e4fa1fb46f7ccdf46fab1b807813e79aff30e84/sspilib-0.6.0.tar.gz", hash = "sha256:b4d4e3402230f14cd93999f3953619163075bcaca3e13dcf2ab5942c269627f4", size = 59976, upload-time = "2026-08-24T06:44:15.771Z" }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/eb/b0/cf45f078d7b9f0a28d7bb247f9db31942d8b81674bb3aaa475e10c8d2623/sspilib-0.6.0-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:d239d78f9619d4fc76a9d57eb929258de50024c56097e73737d46ad58be0acaa", size = 6669242, upload-time = "2026-08-24T06:43:40.61Z" },
+    { url = "https://files.pythonhosted.org/packages/9e/4b/d0f8ebd058ff3e241fef762884419f27cdb2e1597b45ebd87061790813db/sspilib-0.6.0-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:b79f8088f8e2826586e5eb14b68f03f443637df178e95c190765c8065fc57a37", size = 6154277, upload-time = "2026-08-24T06:43:42.397Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/cd/a51bc36af754d67ed425259a4b7dde69f0867245ff8e0209b96e1d3be90d/sspilib-0.6.0-cp311-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:b65fa6f90e523daa6eb95c0aa707cd6c04705bdfab3e42c00723d23141bc74ad", size = 10435322, upload-time = "2026-08-24T06:43:43.968Z" },
+    { url = "https://files.pythonhosted.org/packages/93/29/5d4b9b53c982394d5e81a54d2818ca37478b2d68822a86aede3b4284bf86/sspilib-0.6.0-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:737adc3b14c2079480bcd10139fbab0b2ad683a24a6046ef69d9c769f4672c0a", size = 10403154, upload-time = "2026-08-24T06:43:46.009Z" },
     { url = "https://files.pythonhosted.org/packages/6b/89/d54087115dd1bdeafaaaee610defdcb940ebc241e1e2e7c52ec323e077bc/sspilib-0.6.0-cp311-abi3-win32.whl", hash = "sha256:70223bdfefde9656c48dd17bb58fd0fb7e879e5b08ab028267d585206f393886", size = 473115, upload-time = "2026-08-24T06:43:47.914Z" },
     { url = "https://files.pythonhosted.org/packages/4f/07/2519c128aad9c4062aa46bb8d584e01f8154d119e0a09191258da5935788/sspilib-0.6.0-cp311-abi3-win_amd64.whl", hash = "sha256:b841fabe630101d9e2be6ba56407a2a539087ee85d6ca1477748c21135c9f636", size = 557383, upload-time = "2026-08-24T06:43:49.079Z" },
     { url = "https://files.pythonhosted.org/packages/03/e5/a0aacae71a731a7575e2412b43549214b3fae898a8358a3d63b7c805aa42/sspilib-0.6.0-cp311-abi3-win_arm64.whl", hash = "sha256:9073afb8f30dc0e7f3a40b39fef0fc29e4bda6a3d4e77936f3c496cedc4beade", size = 484383, upload-time = "2026-08-24T06:43:50.291Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/75/da0ed7428c0d79e667fa0291ee5895604f57b1dc819486500f5b69c5a7cd/sspilib-0.6.0-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:05883cd90cb2c67f18fd2418ab0f959549fbe6a9a4fc8013679411af23226d6e", size = 6802460, upload-time = "2026-08-24T06:43:51.685Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/3d/fb885a0160d9c07fb2bc313d392bdd43e8e8436605da8e215fa515d5eee9/sspilib-0.6.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:83f99ed351d3091434f182579d20a419fa7baf03ec154632b5f7f3fbc6aa0788", size = 6276975, upload-time = "2026-08-24T06:43:53.368Z" },
+    { url = "https://files.pythonhosted.org/packages/49/0c/d6baf3003df4b9f61ea4a71eca68b47ec00645686d9db938df5a715850f1/sspilib-0.6.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:8b4b911f59f03601c23357146814e784c9a7612f34f5b933bdb1c50591b173d0", size = 11285390, upload-time = "2026-08-24T06:43:55.139Z" },
+    { url = "https://files.pythonhosted.org/packages/45/4e/90dba10a828311fb7232e1916d132ba2ebd4ec79f41f58310cc3766751be/sspilib-0.6.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:fe8c7c9f749ffd302336a7820889ad9189c237d1f6d24e1232d7e2c653433d5b", size = 11190870, upload-time = "2026-08-24T06:43:57.47Z" },
     { url = "https://files.pythonhosted.org/packages/f6/1d/679cee04cca4244d2a829686df201662618c2e87c6a19390861b04ffd9ee/sspilib-0.6.0-cp314-cp314t-win32.whl", hash = "sha256:0482631c67a57d8710ecbba3bbe49a9fb60e153dfcfee6d1f9b8a8ff6e419548", size = 592349, upload-time = "2026-08-24T06:43:59.426Z" },
     { url = "https://files.pythonhosted.org/packages/82/bc/77c0ec2fee5d94446d245b2ce1dba2f6f2dcfecef20be8d362d2b9bc6a5f/sspilib-0.6.0-cp314-cp314t-win_amd64.whl", hash = "sha256:5937dbe41c34cbbfabbafb84238a06aa8912210cae8a4b909fa20f965868cc89", size = 713678, upload-time = "2026-08-24T06:44:00.795Z" },
     { url = "https://files.pythonhosted.org/packages/fc/12/afd3c28e75a863aa2f29b40887570ebc91b12407818f2812d366b7fce1c2/sspilib-0.6.0-cp314-cp314t-win_arm64.whl", hash = "sha256:7ea194eeb68d8848fde7125a7ac67fbd4a9052442b7ce69ce6c0c8115227ec67", size = 558596, upload-time = "2026-08-24T06:44:02.428Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/7f/6be3c69d44bd030e4ad4b9166b3503c1030372383cc62d77e915cef9b09d/sspilib-0.6.0-cp315-cp315t-macosx_10_15_x86_64.whl", hash = "sha256:76a289f415f9beb6a2f3f0cb37b655863616c303b2a06754e1bb84ad86348aab", size = 6798114, upload-time = "2026-08-24T06:44:03.843Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/e9/f0e69f00f7962637ad54d55bae23084f26768884063fbaa779b28c1bea25/sspilib-0.6.0-cp315-cp315t-macosx_11_0_arm64.whl", hash = "sha256:6ad61668c4eea0fdeefd1f596c4fb7b3f45237b1a5989c12d4412729bded7231", size = 6271747, upload-time = "2026-08-24T06:44:05.63Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/d0/d7b2ca32f5b4047549c397bfc986ab2400817f1d817e1675280e1e9e7d6e/sspilib-0.6.0-cp315-cp315t-manylinux_2_28_aarch64.whl", hash = "sha256:be2b500e7b745569794e8cfa557510f6c18e5402ad8f1fa1abe7adf53b3f3964", size = 11270216, upload-time = "2026-08-24T06:44:07.25Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/49/86f537d48060a8c617b647fd4f6333ad6a80b641ffbbbc7357a2c69c2665/sspilib-0.6.0-cp315-cp315t-manylinux_2_28_x86_64.whl", hash = "sha256:73343ba40b04de0486ab92f60b729eb0768657f71e4c279555d3273f323c0ce4", size = 11205289, upload-time = "2026-08-24T06:44:09.235Z" },
     { url = "https://files.pythonhosted.org/packages/89/b2/68ae0e965f0d4ad6cab30291adb490d73a5a898735452b3c99158d98bfbb/sspilib-0.6.0-cp315-cp315t-win32.whl", hash = "sha256:03335e14f8563e350506b47a15887a99f08102a80cfb6bd715ad83ab1c2c89ae", size = 589548, upload-time = "2026-08-24T06:44:11.251Z" },
     { url = "https://files.pythonhosted.org/packages/d0/4f/1d3c64284faf9fa9b7d5ec2b4b9152cbcd59d0bf260883bd485be5d58551/sspilib-0.6.0-cp315-cp315t-win_amd64.whl", hash = "sha256:071e4e2a617a39a33e31de2c1f313427533879acabe475fedea31f129f7970bb", size = 707549, upload-time = "2026-08-24T06:44:12.826Z" },
     { url = "https://files.pythonhosted.org/packages/82/9d/26db0d0998bf4b20bc14809e30c20845b9ef34eb6114e9fe39541c7ee0a8/sspilib-0.6.0-cp315-cp315t-win_arm64.whl", hash = "sha256:97bb2e9d4d916d4d6f566888a81997bb3ab0e05ac41549fa0fbebabac66de0e8", size = 555718, upload-time = "2026-08-24T06:44:14.359Z" },
@@ -2997,8 +3227,8 @@ name = "xarray"
 version = "2026.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version < '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-3-qdt-cpu') or (python_full_version >= '3.12' and extra != 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-cpu' and extra == 'extra-3-qdt-gpu') or (extra == 'extra-3-qdt-gpu' and extra == 'extra-3-qdt-iqm') or (extra == 'extra-3-qdt-gpu' and extra == 'group-3-qdt-cpu')" },
     { name = "packaging" },
     { name = "pandas" },
 ]
