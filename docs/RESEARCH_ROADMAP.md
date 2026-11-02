@@ -29,7 +29,9 @@ All implementation notes and project documentation are maintained in English. Ea
 | S11b — Load current IBM snapshots for static CPU simulation | Complete | `fix: support static simulation of current IBM profiles` |
 | S11c1 — Freeze external profile inputs | Complete | `fix: bind local campaigns to immutable noise profiles` |
 | S11c2 — Define CPU noise/profile campaigns | Complete | `test: define CPU noise-profile transfer and partition controls` |
-| S11d — Execute and document CPU profile pilots | Next | 72 local validation runs plus matched-partition controls |
+| S11d — Collect CPU profile pilots | Collected; report pending | 72/72 local validation runs passed integrity checks |
+| S11e — Make numerical control tolerance explicit | Complete | `test: expose numerical tolerance in matched-partition controls` |
+| S11f — Complete controls and commit CPU study report | Next | No remote jobs |
 | S11-remote — GPU/HPC and real-QPU pilots | Deferred by user | Prepare code only; no remote jobs |
 | S12 — Confirmatory policy study, final campaign, and paper | Pending scientific evidence | M8–M11 |
 
@@ -62,7 +64,9 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S11b: downloaded IBM calibration metadata for local Aer use only; no quantum circuit was submitted. The current snapshot advertises specialized instructions beyond the static simulator gate subset. The loader now reports explicit exclusions and still rejects unknown unsupported gates. Nine profile tests pass, including current-instruction projection.
 - S11c1: file-based noise-profile selectors are resolved to absolute paths and their bytes are included in run identity; changed snapshots are rejected before execution. Eight campaign tests pass.
 - S11c2: ideal/noisy training configurations, six explicit CPU campaign manifests (72 validation runs total), fixed profile layouts, sample limits, and a matched-partition root-probability diagnostic are prepared. Raw IBM snapshot is local/ignored and its checksum is frozen by planning; IQM uses the bundled Garnet profile.
-- Next: S11d train the four models from this committed revision, execute the six CPU campaigns, run matched-partition controls, regenerate analysis/figures, and commit the report. Do not submit GPU/HPC or QPU jobs. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
+- S11d: four models and all six CPU campaigns were collected from clean commit `82686fb`; 72/72 validation runs completed without failed attempts and analysis/figures regenerated.
+- S11e: the initial IBM matched-partition check failed its strict `1e-10` threshold at `5e-10`. Fusion/zero-threshold ablations did not change it; reconstructed channels have trace residual about `6.3e-15`, and native operation sequences/parameters match. Its precise simulator-level cause remains unresolved. Diagnostic tolerance is now explicit; profile controls will use `--atol 1e-8` and must also preserve threshold decisions. The failed artifact remains archived.
+- Next: S11f rerun the four matched-partition controls with the explicit tolerance, inspect figures, and commit the CPU report. Do not submit GPU/HPC or QPU jobs. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
 
 ## 1. Research objective and scope
 

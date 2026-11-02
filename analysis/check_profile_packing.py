@@ -20,8 +20,11 @@ def main():
     parser.add_argument("--profile", required=True)
     parser.add_argument("--packing", type=int, required=True)
     parser.add_argument("--max-samples", type=int, default=16)
+    parser.add_argument("--atol", type=float, default=1e-10)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
+    if not np.isfinite(args.atol) or args.atol < 0:
+        parser.error("atol must be finite and nonnegative")
     if args.packing < 2 or args.max_samples < 1:
         parser.error("Use packing >= 2 and max-samples >= 1")
     if args.output.exists():
@@ -72,6 +75,7 @@ def main():
         )
         isolated_records.append(isolated.records)
     error = float(np.max(np.abs(reference - packed)))
+    disagreements = int(np.count_nonzero((reference >= 0.5) != (packed >= 0.5)))
     write_json(
         args.output,
         {
@@ -83,8 +87,11 @@ def main():
             "packed": packed.tolist(),
             "isolated_on_same_partitions": reference.tolist(),
             "max_absolute_error": error,
-            "tolerance": 1e-10,
-            "passed": error <= 1e-10,
+            "tolerance": args.atol,
+            "decision_disagreements": disagreements,
+            "minimum_reference_margin": float(np.min(np.abs(reference - 0.5))),
+            "aer_precision": adapter.backend.options.precision,
+            "passed": error <= args.atol and disagreements == 0,
             "profile_metadata": adapter.profile_metadata,
             "packed_records": adapter.records,
             "isolated_records": isolated_records,
@@ -93,7 +100,7 @@ def main():
             "scope": "Local CPU independent-noise model; this does not measure physical crosstalk.",
         },
     )
-    if error > 1e-10:
+    if error > args.atol or disagreements:
         raise RuntimeError(
             f"Packed marginals differ from matched isolated references: {error}"
         )
