@@ -5,6 +5,7 @@ from dataclasses import asdict
 from pathlib import Path
 from unittest.mock import patch
 
+from qdt.analysis import analyze, paired_summary
 from qdt.campaign import completed_result, execute, load_plan, plan
 from qdt.config import Config
 from qdt.experiment import train_model
@@ -61,6 +62,15 @@ class CampaignTests(unittest.TestCase):
             self.assertEqual(execute(root / "plan.json")["skipped"], 2)
             for run in campaign["runs"]:
                 self.assertIsNotNone(completed_result(root, run))
+            with patch(
+                "qiskit_aer.AerSimulator.run",
+                side_effect=AssertionError("Analysis must not execute circuits"),
+            ):
+                report = analyze(root / "plan.json", root / "analysis")
+            self.assertEqual(report["completed_runs"], 2)
+            self.assertEqual(report["comparisons"][0]["paired_models"], 1)
+            self.assertIsNone(report["comparisons"][0]["quality_difference_ci95"])
+            self.assertTrue((root / "analysis/runs.csv").exists())
             output = next(root.glob("runs/*/attempt-*/result.json"))
             output.write_text("{}")
             with self.assertRaisesRegex(ValueError, "checksum"):
@@ -86,6 +96,12 @@ class CampaignTests(unittest.TestCase):
             resumed = execute(root / "plan.json")
             self.assertEqual(resumed["completed"], 1)
             self.assertTrue(resumed["budget_stop"])
+
+    def test_paired_summary_uses_models_as_units(self):
+        result = paired_summary([0.1, 0.1], [2, 2])
+        self.assertEqual(result["paired_models"], 2)
+        self.assertEqual(result["quality_difference_ci95"], [0.1, 0.1])
+        self.assertEqual(result["speedup_ci95"], [2.0, 2.0])
 
     def test_limits_and_atomic_json(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -92,3 +92,14 @@ Run the same `campaign run` command to resume. Completed results are skipped onl
 A campaign uses one coordinator. Per-run claims prevent duplicate execution. After a hard process interruption, `--recover-stale` can recover a claim only from the same host after checking that its recorded PID is absent. Claims from another host or a live PID are not removed automatically.
 
 The shot budget conservatively reserves each attempt's logical-shot upper bound, including failed attempts, before retrying. Time limits include recorded prior attempt durations; an unmeasured hard interruption conservatively reserves wall time since its start, including downtime. The deadline is checked between runs and does not interrupt an in-progress Aer call; use scheduler wall-time limits for a hard external cutoff. These are local simulation campaigns, not live QPU orchestration. Parallel campaign workers and global multi-GPU scheduling are not implemented.
+
+## Rebuild analysis without running circuits
+
+```sh
+uv run qdt analyze --plan results/pilot/plan.json --output results/pilot/analysis --reference isolated
+uv run --extra analysis qdt analyze --plan results/pilot/plan.json --output results/pilot/analysis-with-plots --reference isolated --plots
+```
+
+Use a new or empty output directory. Analysis checks completion/result integrity and recomputes metrics from stored predictions. It produces `runs.csv`, `comparisons.json`, and `report.md`; `--plots` additionally creates standard quality–time PDF/PNG scatter plots using the optional Matplotlib dependency. No model training, circuit execution, or QPU access is needed.
+
+Timing repetitions are collapsed within each model. Quality differences and time ratios are paired by frozen model, separately for each dataset. Confidence intervals use 2,000 model-level bootstrap samples with a fixed seed; one-model comparisons have no confidence interval. Small exploratory samples do not establish non-inferiority. Incomplete campaigns are rejected unless explicitly requested with `--allow-incomplete`; missing runs and failure counts remain in the report.

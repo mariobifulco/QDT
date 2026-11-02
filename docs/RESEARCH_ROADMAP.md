@@ -17,7 +17,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S04 — Implement Aer spatial packing and CPU/GPU selection | Implemented; GPU validation pending | `feat: add disjoint circuit packing and explicit Aer devices` |
 | S05 — Instrument execution and support packed hardware profiles | Implemented; automatic partitions and hardware validation pending | `feat: record execution costs and simulate packed hardware profiles` |
 | S06a — Implement resumable local campaigns | Complete | `feat: add immutable local campaigns and safe resumption` |
-| S06b — Add paired analysis and run a CPU pilot | Next | M5–M6 |
+| S06b — Add paired analysis | Complete | `feat: rebuild paired campaign analysis and optional figures` |
+| S06c — Run a reproducible local CPU pilot | Next | M6; exploratory only |
 | S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
 
 Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only. No GPU benchmark or real QPU execution has been performed. Hardware campaigns and empirical claims must remain pending until measured. The pre-existing README and roadmap edits are included in S00.
@@ -32,7 +33,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S05: Aer and profile adapters share packed execution and accounting. Raw counts, parameter rows, metadata, resolved configurations, checksums, timing, process peak RSS, and exact/shot counters are persisted. Packed profiles require explicit layouts and reject cross-partition/shared-resource routing. Independent asymmetric readout is supported. Automatic partition selection, correlated readout, GPU peak-memory measurement, and live QPU integration remain pending.
 - S05 verification: installed the existing IBM/IQM extras and ran all 31 tests; only the GPU check is skipped. This includes all bundled IQM profile/MOVE checks and explicit two-partition IBM-profile comparisons. Lint and formatting pass. No remote provider was contacted by these tests.
 - S06a: immutable plans, deterministic run IDs, dry validation, atomic non-overwriting JSON, per-attempt records, integrity checks, same-host stale-claim recovery, conservative retry shot reservations, and between-run time limits implemented for one local coordinator. Interruption/resumption and corruption tests pass. Live QPU orchestration, parallel campaign workers, and hard within-run deadlines are not implemented.
-- Next: S06b paired campaign analysis and a small CPU-only pilot. Use the implemented campaign commands in `docs/experiment_guide.md`.
+- S06b: analysis validates raw predictions, writes CSV/JSON/Markdown, and optionally generates PDF/PNG figures. Comparisons pair frozen models within datasets and collapse timing repetitions before model-level bootstrap; no CI is emitted for a single model. Analysis tests forbid circuit execution. Matplotlib is an optional analysis extra, not a simulation dependency.
+- Next: S06c commit a small CPU pilot definition, execute it from the committed revision, and record its outcome. GPU/HPC scaling and real-QPU stages remain pending.
 
 ## 1. Research objective and scope
 

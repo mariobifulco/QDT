@@ -15,6 +15,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+analysis = ["matplotlib>=3.9"]
 iqm = ["iqm-client[qiskit]>=36.0.0"]
 ibm = [
     "qiskit-ibm-runtime>=0.43",
