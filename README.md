@@ -1,5 +1,9 @@
 # QDT
 
+For the HPC–QPU circuit batching research plan, see the
+[research roadmap](docs/RESEARCH_ROADMAP.md), including implementation milestones,
+experiment protocols, result collection and paper preparation.
+
 QDT compares a quantum decision tree with a classical decision tree (CART) on
 classification datasets. All quantum circuits run locally, with or without noise,
 including simulations based on IQM and IBM device profiles.
