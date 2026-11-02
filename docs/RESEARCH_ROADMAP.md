@@ -29,9 +29,10 @@ All implementation notes and project documentation are maintained in English. Ea
 | S11b — Load current IBM snapshots for static CPU simulation | Complete | `fix: support static simulation of current IBM profiles` |
 | S11c1 — Freeze external profile inputs | Complete | `fix: bind local campaigns to immutable noise profiles` |
 | S11c2 — Define CPU noise/profile campaigns | Complete | `test: define CPU noise-profile transfer and partition controls` |
-| S11d — Collect CPU profile pilots | Collected; report pending | 72/72 local validation runs passed integrity checks |
+| S11d — Collect CPU profile pilots | Complete | 72/72 local validation runs passed integrity checks |
 | S11e — Make numerical control tolerance explicit | Complete | `test: expose numerical tolerance in matched-partition controls` |
-| S11f — Complete controls and commit CPU study report | Next | No remote jobs |
+| S11f — Complete controls and commit CPU study report | Complete | `docs: checkpoint verified CPU profile study and resume instructions` |
+| S12a — Extend CPU tracing and benchmark rigor | Next | Node-path traces, randomized repetitions, warm/cold measurements |
 | S11-remote — GPU/HPC and real-QPU pilots | Deferred by user | Prepare code only; no remote jobs |
 | S12 — Confirmatory policy study, final campaign, and paper | Pending scientific evidence | M8–M11 |
 
@@ -66,7 +67,18 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S11c2: ideal/noisy training configurations, six explicit CPU campaign manifests (72 validation runs total), fixed profile layouts, sample limits, and a matched-partition root-probability diagnostic are prepared. Raw IBM snapshot is local/ignored and its checksum is frozen by planning; IQM uses the bundled Garnet profile.
 - S11d: four models and all six CPU campaigns were collected from clean commit `82686fb`; 72/72 validation runs completed without failed attempts and analysis/figures regenerated.
 - S11e: the initial IBM matched-partition check failed its strict `1e-10` threshold at `5e-10`. Fusion/zero-threshold ablations did not change it; reconstructed channels have trace residual about `6.3e-15`, and native operation sequences/parameters match. Its precise simulator-level cause remains unresolved. Diagnostic tolerance is now explicit; profile controls will use `--atol 1e-8` and must also preserve threshold decisions. The failed artifact remains archived.
-- Next: S11f rerun the four matched-partition controls with the explicit tolerance, inspect figures, and commit the CPU report. Do not submit GPU/HPC or QPU jobs. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
+- S11f: four matched-partition controls passed at explicit `1e-8`, with zero threshold-decision changes. Maximum IBM differences were `5e-10`/`6.84e-10`; IQM differences were below `1.3e-15`. Original strict failure is retained. CPU report and checksums: `docs/pilots/local_profiles_20261102.md` and `.json`; raw data/figures: ignored `results/local-profile-pilot/` (about 43 MB).
+- Final verification: 47 tests discovered, 46 passed and one GPU check skipped; lint, formatting, shell syntax, and integrity checks pass. All circuit computations were local CPU simulation. No GPU/Slurm/QPU circuit jobs were submitted.
+- Next: S12a node-path inference traces, randomized/repeated CPU benchmarking, and separate warm/cold costs. Use larger validation/split/model banks before evaluating a quality-constrained contribution. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
+
+### Resume instructions
+
+1. Read this checkpoint and `docs/pilots/local_profiles_20261102.md`; inspect `git status` and recent local commits. Never push.
+2. Keep execution CPU-only until the user changes that instruction. The IBM/Slurm paths are preparation, not permission to launch hardware jobs.
+3. Use the default CPU group: `uv sync --locked --extra ibm --extra iqm --extra analysis`. Regression command: `.venv/bin/python -m unittest discover -q`.
+4. Preserve ignored raw data in `results/cpu-pilot/` and `results/local-profile-pilot/`. The committed reports contain checksums, not the complete raw archive. Preserve the original failed strict numerical control as well.
+5. Resume at S12a. Create a new manifest/plan/output directory for new code or experimental settings; do not overwrite old models or results. Existing results can be analyzed without new circuit execution.
+6. Keep the test set held out. The completed studies use validation prefixes and cannot establish paper-level performance or non-inferiority.
 
 ## 1. Research objective and scope
 

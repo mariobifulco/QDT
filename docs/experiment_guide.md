@@ -249,3 +249,5 @@ The check saves probabilities, layouts, raw records, provenance, and its source 
 
 
 In the first downloaded IBM-profile control, a strict `1e-10` check failed at roughly `5e-10`. Native operation sequences/parameters matched, changing fusion and zero-threshold settings did not change the discrepancy, and reconstructed noise channels were trace-preserving to about `6.3e-15`. The exact source of the remaining simulator-level numerical difference is unresolved. For these exploratory profile controls, an explicit `--atol 1e-8` is used, on the scale of the SDK's channel-validation tolerance; this is an engineering acceptance criterion, not a formal error bound. The original failed artifact is retained, and threshold decisions must still agree. Ideal/simple-noise unit tests retain tighter tolerances.
+
+The completed CPU profile study, limitations, numerical investigation, and artifact checksums are documented in `docs/pilots/local_profiles_20261102.md` and `.json`. All 72 campaign runs completed; no GPU, Slurm, or QPU circuit job was executed.
