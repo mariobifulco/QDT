@@ -228,3 +228,21 @@ New plans include an execution-environment fingerprint in each run ID. This dist
 Current IBM calibration snapshots may also advertise `xslow`, `measure_2`, `reset_2`, `measure_reset`, and `measure_reset_2`. The local reader explicitly excludes these specialized instructions from its static simulation target and records `excluded_native_instructions` in profile metadata. Standard gates retain their original calibration/noise information; the raw snapshot is unchanged. Unknown unsupported instructions still raise an error. These simulations do not evaluate the excluded operations or hardware crosstalk.
 
 File-based profile paths are resolved from the planning working directory and frozen with their byte checksums. Execute planning from the repository root for the supplied examples. Changing a snapshot requires a new plan; completed results remain analyzable from their stored records.
+
+## CPU-only noise/profile pilot definitions
+
+The `profile_training_ideal.json` and `profile_training_noisy.json` configurations use the same small training budget and fixed split; only controlled noise differs. Train each with seeds 0 and 1, saving to `results/local-profile-pilot/models/ideal-0.json`, `ideal-1.json`, `noisy-0.json`, and `noisy-1.json`.
+
+Six supplied manifests named `profile_<training>_<regime>.json` cover `training=ideal/noisy` and `regime=custom/ibm/iqm`. Each contains 12 CPU validation runs: two frozen models, packing 1/2/4, and exact or 512-shot measurements. The first 16 validation rows are explicitly limited; no test set is evaluated. The sample is too small for generalization or non-inferiority claims.
+
+The IBM manifest needs `results/local-profile-pilot/profiles/ibm_fez.json`. This is a calibration snapshot, not execution on that QPU. The snapshot was obtained using the existing read-only calibration download command; all circuit calculations run in Aer CPU. Preserve its original bytes: replacing it requires regenerating layouts and plans. IQM uses the bundled Garnet profile. Profile manifests explicitly freeze prefixes of the same selected four-partition layout.
+
+For each manifest, use the standard campaign plan/run/verify/analyze commands with a distinct directory under `results/local-profile-pilot/campaigns/`. Run training, planning, and collection from one committed revision and environment. Keep timing comparisons within a noise regime and training family; profile simulations do not estimate QPU runtime.
+
+`analysis/check_profile_packing.py` provides a stronger numerical control: it compares each packed root-node probability with an isolated circuit using that same physical partition and input. Example:
+
+```sh
+.venv/bin/python analysis/check_profile_packing.py --model results/local-profile-pilot/models/ideal-0.json --profile file:results/local-profile-pilot/profiles/ibm_fez.json --packing 4 --max-samples 16 --output results/local-profile-pilot/matched-ibm-4.json
+```
+
+The check saves probabilities, layouts, raw records, provenance, and its source checksum, and fails above an absolute error of `1e-10`. Repeat for packing 2 and for `iqm:garnet`. Agreement is expected for independent-noise models. It validates composition and decoding, not physical crosstalk or the absence of a hardware packing penalty. Comparisons that assign inputs to different partitions can still differ because of calibration heterogeneity.

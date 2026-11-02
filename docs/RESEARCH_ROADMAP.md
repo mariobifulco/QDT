@@ -28,7 +28,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S11a — Freeze CPU control inputs and execution identity | Complete | `feat: freeze campaign sample limits and execution identity` |
 | S11b — Load current IBM snapshots for static CPU simulation | Complete | `fix: support static simulation of current IBM profiles` |
 | S11c1 — Freeze external profile inputs | Complete | `fix: bind local campaigns to immutable noise profiles` |
-| S11c2 — Define CPU noise/profile campaigns | Next | User requested CPU-only execution |
+| S11c2 — Define CPU noise/profile campaigns | Complete | `test: define CPU noise-profile transfer and partition controls` |
+| S11d — Execute and document CPU profile pilots | Next | 72 local validation runs plus matched-partition controls |
 | S11-remote — GPU/HPC and real-QPU pilots | Deferred by user | Prepare code only; no remote jobs |
 | S12 — Confirmatory policy study, final campaign, and paper | Pending scientific evidence | M8–M11 |
 
@@ -60,7 +61,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S11a: campaign sample limits, exact input indices, budget bounds, and environment fingerprints are frozen in run identities. Completed-result checks validate indices/environment as well as configuration and file checksums. Seven campaign tests pass.
 - S11b: downloaded IBM calibration metadata for local Aer use only; no quantum circuit was submitted. The current snapshot advertises specialized instructions beyond the static simulator gate subset. The loader now reports explicit exclusions and still rejects unknown unsupported gates. Nine profile tests pass, including current-instruction projection.
 - S11c1: file-based noise-profile selectors are resolved to absolute paths and their bytes are included in run identity; changed snapshots are rejected before execution. Eight campaign tests pass.
-- Next: S11c2 small CPU-only noise/profile campaign definitions and matched-partition diagnostics. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
+- S11c2: ideal/noisy training configurations, six explicit CPU campaign manifests (72 validation runs total), fixed profile layouts, sample limits, and a matched-partition root-probability diagnostic are prepared. Raw IBM snapshot is local/ignored and its checksum is frozen by planning; IQM uses the bundled Garnet profile.
+- Next: S11d train the four models from this committed revision, execute the six CPU campaigns, run matched-partition controls, regenerate analysis/figures, and commit the report. Do not submit GPU/HPC or QPU jobs. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
 
 ## 1. Research objective and scope
 

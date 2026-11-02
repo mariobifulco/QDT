@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "models": [
+    "../../results/local-profile-pilot/models/noisy-0.json",
+    "../../results/local-profile-pilot/models/noisy-1.json"
+  ],
+  "split": "validation",
+  "max_samples": 16,
+  "repetitions": 1,
+  "executions": [
+    {
+      "name": "exact_B1",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 1,
+        "batch_size": 32,
+        "shots": 0,
+        "depolarizing": 0.003,
+        "amplitude_damping": 0.001,
+        "phase_damping": 0.002,
+        "readout_error": 0.02,
+        "fake_qpu": null
+      }
+    },
+    {
+      "name": "exact_B2",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 2,
+        "batch_size": 32,
+        "shots": 0,
+        "depolarizing": 0.003,
+        "amplitude_damping": 0.001,
+        "phase_damping": 0.002,
+        "readout_error": 0.02,
+        "fake_qpu": null
+      }
+    },
+    {
+      "name": "exact_B4",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 4,
+        "batch_size": 32,
+        "shots": 0,
+        "depolarizing": 0.003,
+        "amplitude_damping": 0.001,
+        "phase_damping": 0.002,
+        "readout_error": 0.02,
+        "fake_qpu": null
+      }
+    },
+    {
+      "name": "sampled_B1",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 1,
+        "batch_size": 32,
+        "shots": 512,
+        "depolarizing": 0.003,
+        "amplitude_damping": 0.001,
+        "phase_damping": 0.002,
+        "readout_error": 0.02,
+        "fake_qpu": null
+      }
+    },
+    {
+      "name": "sampled_B2",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 2,
+        "batch_size": 32,
+        "shots": 512,
+        "depolarizing": 0.003,
+        "amplitude_damping": 0.001,
+        "phase_damping": 0.002,
+        "readout_error": 0.02,
+        "fake_qpu": null
+      }
+    },
+    {
+      "name": "sampled_B4",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 4,
+        "batch_size": 32,
+        "shots": 512,
+        "depolarizing": 0.003,
+        "amplitude_damping": 0.001,
+        "phase_damping": 0.002,
+        "readout_error": 0.02,
+        "fake_qpu": null
+      }
+    }
+  ],
+  "limits": {
+    "max_runs": 12,
+    "max_logical_shots": 100000,
+    "max_seconds": 120
+  }
+}

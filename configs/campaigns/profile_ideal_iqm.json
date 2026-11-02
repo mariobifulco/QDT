@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "models": [
+    "../../results/local-profile-pilot/models/ideal-0.json",
+    "../../results/local-profile-pilot/models/ideal-1.json"
+  ],
+  "split": "validation",
+  "max_samples": 16,
+  "repetitions": 1,
+  "executions": [
+    {
+      "name": "exact_B1",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 1,
+        "batch_size": 32,
+        "shots": 0,
+        "depolarizing": 0,
+        "amplitude_damping": 0,
+        "phase_damping": 0,
+        "readout_error": 0,
+        "fake_qpu": "iqm:garnet",
+        "qpu_layout": [
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "exact_B2",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 2,
+        "batch_size": 32,
+        "shots": 0,
+        "depolarizing": 0,
+        "amplitude_damping": 0,
+        "phase_damping": 0,
+        "readout_error": 0,
+        "fake_qpu": "iqm:garnet",
+        "qpu_layout": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "name": "exact_B4",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 4,
+        "batch_size": 32,
+        "shots": 0,
+        "depolarizing": 0,
+        "amplitude_damping": 0,
+        "phase_damping": 0,
+        "readout_error": 0,
+        "fake_qpu": "iqm:garnet",
+        "qpu_layout": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          11
+        ]
+      }
+    },
+    {
+      "name": "sampled_B1",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 1,
+        "batch_size": 32,
+        "shots": 512,
+        "depolarizing": 0,
+        "amplitude_damping": 0,
+        "phase_damping": 0,
+        "readout_error": 0,
+        "fake_qpu": "iqm:garnet",
+        "qpu_layout": [
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "name": "sampled_B2",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 2,
+        "batch_size": 32,
+        "shots": 512,
+        "depolarizing": 0,
+        "amplitude_damping": 0,
+        "phase_damping": 0,
+        "readout_error": 0,
+        "fake_qpu": "iqm:garnet",
+        "qpu_layout": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "name": "sampled_B4",
+      "overrides": {
+        "aer_device": "CPU",
+        "threads": 1,
+        "packing_factor": 4,
+        "batch_size": 32,
+        "shots": 512,
+        "depolarizing": 0,
+        "amplitude_damping": 0,
+        "phase_damping": 0,
+        "readout_error": 0,
+        "fake_qpu": "iqm:garnet",
+        "qpu_layout": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          11
+        ]
+      }
+    }
+  ],
+  "limits": {
+    "max_runs": 12,
+    "max_logical_shots": 100000,
+    "max_seconds": 120
+  }
+}
