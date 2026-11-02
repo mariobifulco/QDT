@@ -22,8 +22,10 @@ All implementation notes and project documentation are maintained in English. Ea
 | S06d — Execute and document the CPU pilot | Complete | `docs: record the verified exploratory CPU pilot` |
 | S07 — Add deterministic profile partition selection | Complete offline | `feat: select deterministic calibration-aware profile partitions` |
 | S08 — Preserve old model IDs and add scalable synthetic data | Complete | `feat: scale synthetic data and preserve frozen artifact compatibility` |
-| S09 — Add validation-only fixed-setting selection | Next | M8 offline baseline; hardware pilot still required |
-| S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
+| S09 — Add validation-only fixed-setting selection | Complete offline | `feat: select and apply validation-only fixed execution policies` |
+| S10 — Implement the IBM live QPU adapter and durable job recovery | Next | User selected IBM first |
+| S11 — GPU/HPC and real-QPU pilots | Pending external resources and budgets | M6–M7 |
+| S12 — Confirmatory policy study, final campaign, and paper | Pending scientific evidence | M8–M11 |
 
 Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only. No GPU benchmark or real QPU execution has been performed. Hardware campaigns and empirical claims must remain pending until measured. The pre-existing README and roadmap edits are included in S00.
 
@@ -42,7 +44,9 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S06d: 24/24 CPU validation runs completed from clean commit `9fbbbc8`; resumption skipped all completed runs. PDF/PNG generated and visually checked. Native request batching already captures most observed speedup in this tiny pilot; no general packing, GPU, or hardware claim is established. Summary and checksums: `docs/pilots/cpu_pilot_20261102.md` and `.json`. Raw data remains in ignored `results/cpu-pilot/`. Full regression: 35 tests, one GPU skip; lint/format/Slurm syntax pass.
 - S07: optional deterministic greedy connected partitions use target readout/two-qubit errors and penalize missing calibration. Explicit layouts remain supported; compiled-circuit validation rejects infeasible routing and shared resonators. Tests verify deterministic calibration ranking and automatic/explicit profile equivalence. No optimal packing or crosstalk claim is made.
 - S08: synthetic sample count/data seed are configurable and independently recorded. Saved schema-v1 model IDs remain stable across additive Config defaults; the real S06 CPU pilot models were reloaded successfully. Unfinished campaigns now reject code/environment changes instead of silently mixing revisions; completed old results remain readable.
-- Next: S09 validation-only fixed-setting selection and a frozen policy artifact; then provider-specific QPU integration. GPU and real-QPU runs require external resources and remain unperformed.
+- Final S09 verification: 39 tests passed with one GPU skip; lint and formatting pass.
+- S09: validation-only per-model fixed-setting selection, policy integrity/model matching, measured attempt/bookkeeping cost, and `predict --policy` implemented. Test campaigns and incomplete validation campaigns are rejected. This implements a required baseline, not the proposed adaptive research contribution.
+- Next: S10 live IBM/IQM adapter with durable job-ID recovery; the user selected IBM first and an NVIDIA GPU Slurm cluster. Cluster connection details and a hardware budget remain to be supplied. No live adapter, QPU submission, GPU benchmark, final campaign, adaptive policy, or completed manuscript is claimed. Complete M0's full-text novelty review and freeze hardware budgets before confirmatory collection.
 
 ## 1. Research objective and scope
 

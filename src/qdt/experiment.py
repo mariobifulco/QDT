@@ -205,8 +205,12 @@ def main(argv):
     )
     infer = sub.add_parser("predict")
     infer.add_argument("--model", required=True, type=Path)
-    infer.add_argument(
+    settings = infer.add_mutually_exclusive_group()
+    settings.add_argument(
         "--execution", type=Path, help="JSON containing execution overrides only"
+    )
+    settings.add_argument(
+        "--policy", type=Path, help="Validated fixed-setting policy JSON"
     )
     infer.add_argument(
         "--inputs", type=Path, help="JSON matrix of raw features, original column order"
@@ -230,13 +234,19 @@ def main(argv):
         model.save(args.output)
         print(f"Saved model {model.model_id} to {args.output}")
     else:
+        model = Model.load(args.model)
+        execution = json.loads(args.execution.read_text()) if args.execution else None
+        policy_id = None
+        if args.policy:
+            from .selection import policy_execution
+
+            execution, policy_id = policy_execution(args.policy, model)
         result = evaluate(
-            Model.load(args.model),
-            execution=json.loads(args.execution.read_text())
-            if args.execution
-            else None,
+            model,
+            execution=execution,
             inputs=json.loads(args.inputs.read_text()) if args.inputs else None,
             split=args.split,
         )
+        result["policy_id"] = policy_id
         write_json(args.output, result)
         print(f"Saved {len(result['predictions'])} predictions to {args.output}")

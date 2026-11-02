@@ -18,6 +18,10 @@ from .quantum_tree import fit, predict
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "select":
+        from .selection import main as selection_main
+
+        return selection_main(argv[1:])
     if argv and argv[0] == "analyze":
         from .analysis import main as analysis_main
 
@@ -30,7 +34,10 @@ def main(argv=None):
         from .experiment import main as experiment_main
 
         return experiment_main(argv)
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog="Workflow commands: qdt train, predict, campaign, analyze, select. Use COMMAND --help for details.",
+    )
     parser.add_argument("--config", type=Path)
     parser.add_argument("--dataset", choices=DATASET_KEYS)
     parser.add_argument("--seed", type=int)

@@ -9,7 +9,8 @@ from qdt.analysis import analyze, paired_summary
 from qdt.campaign import completed_result, execute, load_plan, plan
 from qdt.config import Config
 from qdt.experiment import train_model
-from qdt.model import write_json
+from qdt.model import Model, write_json
+from qdt.selection import policy_execution, select
 from test_qdt import TEST_CIRCUIT
 
 
@@ -71,6 +72,14 @@ class CampaignTests(unittest.TestCase):
             self.assertEqual(report["comparisons"][0]["paired_models"], 1)
             self.assertIsNone(report["comparisons"][0]["quality_difference_ci95"])
             self.assertTrue((root / "analysis/runs.csv").exists())
+            policy = select(root / "plan.json", reference="isolated")
+            write_json(root / "policy.json", policy)
+            model = Model.load(root / "model.json")
+            execution, policy_id = policy_execution(root / "policy.json", model)
+            self.assertEqual(policy_id, policy["policy_id"])
+            self.assertIn(execution["packing_factor"], (1, 3))
+            self.assertGreater(policy["selection_attempt_wall_s"], 0)
+
             output = next(root.glob("runs/*/attempt-*/result.json"))
             output.write_text("{}")
             with self.assertRaisesRegex(ValueError, "checksum"):
@@ -115,6 +124,18 @@ class CampaignTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Code or environment changed"):
                     execute(root / "plan.json")
             self.assertFalse(list(root.glob("runs/*/attempt-*")))
+
+    def test_selection_rejects_test_data_and_incomplete_campaigns(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root, manifest_path, manifest = self.prepare(folder)
+            write_json(root / "plan.json", plan(manifest_path))
+            with self.assertRaisesRegex(ValueError, "complete validation"):
+                select(root / "plan.json", reference="isolated")
+            manifest["split"] = "test"
+            manifest_path.write_text(json.dumps(manifest))
+            write_json(root / "test-plan.json", plan(manifest_path))
+            with self.assertRaisesRegex(ValueError, "validation data"):
+                select(root / "test-plan.json", reference="isolated")
 
     def test_limits_and_atomic_json(self):
         with tempfile.TemporaryDirectory() as folder:

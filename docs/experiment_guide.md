@@ -128,3 +128,14 @@ On systems with slow system-font discovery, the tested Matplotlib version can us
 For `synthetic` or `synthetic_xor`, set `synthetic_samples` (at least 20) and `data_seed` in the training configuration. These settings control data generation independently of optimizer initialization. Save the resulting checksum and exact split indices with each model. Changing the number of training samples alone is not the same experiment as changing the generated dataset size.
 
 Saved schema-v1 model identities preserve their original configuration fields when newer defaults are added. The earlier CPU pilot models still load with their original IDs. This supports reading old artifacts, not silently mixing code revisions in an unfinished campaign: starting new work from a plan checks source, dependency lock, package versions, Python, and platform. If those change, create a new plan in a fresh output directory. Completed old results remain verifiable and analyzable without rerunning them.
+
+## Select a fixed setting using validation only
+
+```sh
+uv run qdt select --plan results/cpu-pilot/campaign/plan.json --reference sequential --delta 0.01 --output results/cpu-pilot/fixed-policy.json
+uv run qdt predict --model results/cpu-pilot/models/seed-0.json --policy results/cpu-pilot/fixed-policy.json --output results/cpu-pilot/policy-validation.json
+```
+
+Selection requires a complete validation campaign and rejects test campaigns. For each frozen model, it selects the lowest median measured total time among settings whose observed mean balanced accuracy is within `delta` of the reference. The policy records model IDs, execution overrides, source/selection provenance, measured selection-attempt time, and bookkeeping time. Missing attempt timing is null. This is the validation-selected fixed-setting baseline, not an adaptive scheduler or a non-inferiority guarantee.
+
+`predict --policy` verifies the policy checksum and model ID. It cannot be combined with `--execution`, and still defaults to validation. An eventual held-out evaluation requires explicit `--split test` after the study protocol and settings are frozen. Include selection cost and test uncertainty when reporting any benefit.
