@@ -16,10 +16,6 @@ dependencies = [
 
 [project.optional-dependencies]
 iqm = ["iqm-client[qiskit]>=36.0.0"]
-cudaq = [
-    "cudaq>=0.16.0",
-    "cuda-quantum-cu13==0.16.0; sys_platform == 'darwin'",
-]
 ibm = [
     "qiskit-ibm-runtime>=0.43",
     "python-dotenv>=1.0",

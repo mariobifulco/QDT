@@ -21,8 +21,8 @@ saves metrics, predictions, timings, the quantum tree and its configuration.
 Use a new output filename for each run; existing files are never overwritten.
 
 Choose an example in `configs/`: `aer_noiseless.json` for ideal simulation,
-`custom_noisy.json` for user-defined noise, `cudaq_noiseless.json` for CUDA-Q,
-or `iqm.json` / `ibm.json` for device profiles. Edit the JSON to set the circuit,
+`custom_noisy.json` for user-defined noise, or `iqm.json` / `ibm.json` for
+device profiles. Edit the JSON to set the circuit,
 tree depth, training budget and sampling: `shots: 0` uses exact probabilities;
 positive values sample measurement outcomes. Override the dataset or seed at
 launch with, for example, `--dataset iris --seed 7`.
@@ -32,9 +32,8 @@ For custom noise, keep `fake_qpu: null` and adjust `depolarizing`,
 The example values are illustrative, not hardware calibrations. With an IQM or
 IBM profile, keep these four rates at zero: noise comes from the profile.
 
-IQM and CUDA-Q require their optional dependencies. Run their examples with
-`uv run --extra iqm qdt --config configs/iqm.json` or
-`uv run --extra cudaq qdt --config configs/cudaq_noiseless.json`.
+IQM requires its optional dependency. Run its example with
+`uv run --extra iqm qdt --config configs/iqm.json`.
 Use `uv run qdt --list-qpus` to list bundled IQM models.
 
 For IBM, copy `.env.example` to `.env`, fill in your credentials and download a

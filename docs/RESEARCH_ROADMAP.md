@@ -11,8 +11,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | Step | Status | Local commit subject / evidence |
 |---|---|---|
 | S00 — Record the approved roadmap | Complete | `docs: checkpoint the approved research roadmap` |
-| S01 — Freeze an initial protocol and remove CUDA-Q | Next | Section 3.1 and M0 |
-| S02 — Save preprocessing, validation splits, and complete models | Pending | M1 |
+| S01 — Freeze an initial protocol and remove CUDA-Q | Complete | `chore: remove CUDA-Q and record the exploratory protocol` |
+| S02 — Save preprocessing, validation splits, and complete models | Next | M1 |
 | S03 — Separate training/inference and capture optimizer traces | Pending | M1 |
 | S04 — Implement Aer spatial packing and CPU/GPU selection | Pending | M2 |
 | S05 — Instrument execution and support packed hardware profiles | Pending | M3–M4 |
@@ -20,6 +20,12 @@ All implementation notes and project documentation are maintained in English. Ea
 | S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
 
 Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only. No GPU benchmark or real QPU execution has been performed. Hardware campaigns and empirical claims must remain pending until measured. The pre-existing README and roadmap edits are included in S00.
+
+### Latest implementation notes
+
+- S00: `d773f3a` records the approved roadmap.
+- S01: CUDA-Q adapter/config/dependencies/CI removed; 24 checks passed (one optional check skipped). Dependency resolution required registry metadata after the offline cache proved incomplete; existing retained versions were preserved. Initial protocol and related-work comparison are in `docs/research_protocol.md` and `docs/related_work.md`; references are in `paper/references.bib`. Final hardware budget and full-text novelty audit remain pending, so M0 is exploratory rather than fully frozen.
+- Next: M1 preprocessing/validation/model persistence; run tests before committing.
 
 ## 1. Research objective and scope
 
@@ -86,7 +92,7 @@ For the initial GPU platform, use a compatible Linux/NVIDIA environment with GPU
 
 Prioritize single-GPU simulation and independent circuits distributed across CPU workers or GPUs. Distributed simulation of one large statevector through MPI/cache blocking is optional unless circuit sizes require it. Distinguish this from distributing independent circuit evaluations.
 
-## 2. Current repository baseline
+## 2. Original repository baseline (before implementation)
 
 The initial inspection identified:
 
@@ -138,7 +144,9 @@ Develop M4 instrumentation alongside the experiments. Do not leave it until coll
 
 ### 3.1 CUDA-Q removal assessment
 
-CUDA-Q is not needed to complete any milestone. The preferred simplification is to remove it if no active experiment depends on it. This document update does not remove implementation files.
+Implementation status: removed in S01. Aer-only adapter checks were retained; the lockfile no longer contains CUDA-Q. The list below records the cleanup scope.
+
+CUDA-Q is not needed to complete any milestone. No active research configuration requires it. The implementation has been removed; historical results remain untouched.
 
 Perform the assessment early, before introducing new Aer options:
 
@@ -628,7 +636,7 @@ uv run --extra ibm --extra iqm python -m unittest -v test_qpu
 bash -n slurm/run.sbatch
 ```
 
-CUDA-Q tests remain in the current CI until a separate cleanup implements their removal; they are not prerequisites for this research plan. The commands above do not validate GPU execution or real QPU access.
+CUDA-Q tests and its CI step have been removed; the retained adapter checks run without CUDA-Q. The commands above do not validate GPU execution or real QPU access.
 
 ### 17.2 Aer GPU setup to implement and document
 

@@ -473,7 +473,6 @@ class QDTTests(unittest.TestCase):
             "iqm.json",
             "custom_noisy.json",
             "aer_noiseless.json",
-            "cudaq_noiseless.json",
         }
         self.assertEqual(
             {p.name for p in (repository / "configs").glob("*.json")}, filenames

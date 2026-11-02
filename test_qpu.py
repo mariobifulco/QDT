@@ -150,7 +150,7 @@ class QPUProfileTests(unittest.TestCase):
         for values in (
             {"fake_qpu": ""},
             {"fake_qpu": True},
-            {"fake_qpu": "iqm:adonis", "backend": "cudaq"},
+            {"fake_qpu": "iqm:adonis", "backend": "unsupported"},
             {"fake_qpu": "iqm:adonis", "readout_error": 0.01},
             {"qpu_layout": [0]},
             {"fake_qpu": "iqm:adonis", "qpu_layout": [-1]},

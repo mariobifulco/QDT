@@ -53,8 +53,10 @@ class Config:
             object.__setattr__(self, "circuit", Circuit(**self.circuit))
         if not isinstance(self.circuit, Circuit):
             raise ValueError("circuit must be a Circuit or its JSON definition")
-        if self.backend not in {"aer", "cudaq"}:
-            raise ValueError("backend must be aer or cudaq; use fake_qpu for IBM/IQM")
+        if self.backend != "aer":
+            raise ValueError(
+                "backend must be aer; use fake_qpu for local IBM/IQM profiles"
+            )
         if self.fake_qpu is not None:
             if not isinstance(self.fake_qpu, str) or not self.fake_qpu.strip():
                 raise ValueError(
