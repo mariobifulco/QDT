@@ -1,12 +1,14 @@
 """Train once, then evaluate frozen models without refitting preprocessing."""
 
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import platform
 import subprocess
+import sys
 import time
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import numpy as np
@@ -16,23 +18,57 @@ from .adapters import get_adapter
 from .config import Config
 from .data import dataset_checksum, load_dataset, prepare_dataset
 from .model import Model
+from .qpu import _json_default
 from .quantum_tree import fit
 
 
 def provenance():
+    root = Path(__file__).resolve().parents[2]
+
     def git(*args):
-        result = subprocess.run(["git", *args], capture_output=True, text=True)
+        result = subprocess.run(
+            ["git", "-C", str(root), *args], capture_output=True, text=True
+        )
         return result.stdout.strip() if result.returncode == 0 else None
 
+    versions = {}
+    for name in (
+        "qiskit",
+        "qiskit-aer",
+        "qiskit-aer-gpu",
+        "numpy",
+        "scipy",
+        "scikit-learn",
+    ):
+        try:
+            versions[name] = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            versions[name] = None
+    lock = root / "uv.lock"
     return {
         "commit": git("rev-parse", "HEAD"),
         "git_status": git("status", "--porcelain"),
         "python": platform.python_version(),
         "platform": platform.platform(),
-        "versions": {
-            name: importlib.metadata.version(name)
-            for name in ("qiskit", "qiskit-aer", "numpy", "scipy", "scikit-learn")
-        },
+        "versions": versions,
+        "lockfile_sha256": hashlib.sha256(lock.read_bytes()).hexdigest()
+        if lock.exists()
+        else None,
+    }
+
+
+def memory_usage():
+    try:
+        import resource
+
+        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        peak_bytes = int(peak if sys.platform == "darwin" else peak * 1024)
+    except ImportError:
+        peak_bytes = None
+    return {
+        "process_peak_rss_bytes": peak_bytes,
+        "scope": "process lifetime",
+        "gpu_peak_memory_bytes": None,
     }
 
 
@@ -49,7 +85,7 @@ def write_json(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x") as handle:
-        json.dump(value, handle, indent=2, allow_nan=False)
+        json.dump(value, handle, indent=2, allow_nan=False, default=_json_default)
         handle.write("\n")
 
 
@@ -77,6 +113,9 @@ def train_model(config):
                 "setup_s": setup_s,
                 "training_s": training_s,
                 "total_s": time.perf_counter() - start,
+                "statistics": adapter.statistics,
+                "backend_records": adapter.records,
+                "memory": memory_usage(),
                 "probability_calls": adapter.calls,
                 "logical_circuits": adapter.circuits,
                 "seeds": {
@@ -115,6 +154,10 @@ def evaluate(model, *, execution=None, split="validation", inputs=None):
         "split": split if inputs is None else "external",
         "sample_indices": indices,
         "execution": execution or {},
+        "resolved_config": asdict(config),
+        "statistics": adapter.statistics,
+        "backend_records": adapter.records,
+        "memory": memory_usage(),
         "setup_s": setup_s,
         "predict_s": predict_s,
         "total_s": time.perf_counter() - start,
@@ -130,6 +173,7 @@ def evaluate(model, *, execution=None, split="validation", inputs=None):
     )
     if y is not None:
         result["y_true"] = y.tolist()
+    result["total_s"] = time.perf_counter() - start
     return result
 
 

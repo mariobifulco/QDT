@@ -50,3 +50,13 @@ Use a compatible Linux/NVIDIA cluster. Keep its environment separate from local 
 5. Use `aer_device: GPU` in execution overrides and preserve result metadata. Do not run `uv sync` against the CPU project environment as a way to prepare GPU support.
 
 GPU correctness and performance have not been measured on the current CPU-only Mac. Multi-GPU scaling remains a later pilot.
+
+## Hardware-profile simulation and execution records
+
+Profiles still run locally in Aer. A profile does not submit a QPU job. For packing greater than one, provide `qpu_layout` with one disjoint physical-qubit group per copy, flattened in copy order. For a two-qubit circuit and packing two, an example is `[0, 1, 4, 5]`, provided those groups are valid for the selected device. Tail batches reuse the first active partitions.
+
+The compiler must keep operations inside the declared partitions. Routing outside them, interactions across copies, or shared resonator operations are rejected for packed profile simulations. Automatic partition search and hardware crosstalk characterization are not yet implemented. Readout corrections support independent asymmetric errors; correlated readout requires a later extension.
+
+Frozen-model training and inference outputs include backend request records with inputs, raw counts for finite shots, marginal probabilities, actual Aer metadata, and layout information. Counters distinguish logical evaluations, composite circuits, backend requests, composite shots, and logical marginal samples. Exact-probability references record zero physical shots, although Aer internally receives a dummy shot argument.
+
+`max_memory_mb` caps Aer memory; `parallel_experiments` and `parallel_shots` expose native execution limits alongside `threads`. CPU/GPU memory reporting currently includes process-lifetime peak RSS; GPU peak memory is explicitly unavailable rather than estimated. Raw training records currently remain inside the model JSON, which is simple but can become large; campaigns should archive these files and budget storage accordingly.

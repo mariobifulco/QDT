@@ -26,6 +26,9 @@ class Config:
     packing_factor: int = 1
     aer_device: str = "CPU"
     aer_method: str = "automatic"
+    max_memory_mb: int = 4096
+    parallel_experiments: int = 1
+    parallel_shots: int = 1
     shots: int = 0  # Exact probabilities; positive values enable shot sampling.
     depolarizing: float = 0.0
     amplitude_damping: float = 0.0
@@ -50,6 +53,9 @@ class Config:
             "transpiler_seed",
             "batch_size",
             "packing_factor",
+            "max_memory_mb",
+            "parallel_experiments",
+            "parallel_shots",
             "shots",
             "threads",
             "max_evals",
@@ -74,6 +80,8 @@ class Config:
             object.__setattr__(self, "circuit", Circuit(**self.circuit))
         if not isinstance(self.circuit, Circuit):
             raise ValueError("circuit must be a Circuit or its JSON definition")
+        if min(self.max_memory_mb, self.parallel_experiments, self.parallel_shots) < 1:
+            raise ValueError("Aer memory and parallelism limits must be positive")
         if self.packing_factor < 1:
             raise ValueError("packing_factor must be positive")
         if self.aer_device not in {"CPU", "GPU"}:
@@ -103,12 +111,12 @@ class Config:
             if (
                 self.fake_qpu is None
                 or not isinstance(self.qpu_layout, (list, tuple))
-                or len(self.qpu_layout) != self.circuit.num_qubits
+                or len(self.qpu_layout) != self.packing_factor * self.circuit.num_qubits
                 or any(type(q) is not int or q < 0 for q in self.qpu_layout)
                 or len(set(self.qpu_layout)) != len(self.qpu_layout)
             ):
                 raise ValueError(
-                    "qpu_layout needs one distinct physical qubit per circuit qubit"
+                    "qpu_layout needs distinct physical qubits for every packed circuit qubit"
                 )
             object.__setattr__(self, "qpu_layout", tuple(self.qpu_layout))
         if self.dataset not in DATASET_KEYS:

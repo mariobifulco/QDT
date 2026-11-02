@@ -15,8 +15,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S02 — Save preprocessing, validation splits, and complete models | Complete | `feat: persist preprocessing splits and frozen QDT models` |
 | S03 — Separate training/inference and capture optimizer traces | Complete | `feat: separate training and frozen inference with optimizer traces` |
 | S04 — Implement Aer spatial packing and CPU/GPU selection | Implemented; GPU validation pending | `feat: add disjoint circuit packing and explicit Aer devices` |
-| S05 — Instrument execution and support packed hardware profiles | Next | M3–M4 |
-| S06 — Implement resumable local campaigns and analysis | Pending | M5 |
+| S05 — Instrument execution and support packed hardware profiles | Implemented; automatic partitions and hardware validation pending | `feat: record execution costs and simulate packed hardware profiles` |
+| S06 — Implement resumable local campaigns and analysis | Next | M5 |
 | S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
 
 Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only. No GPU benchmark or real QPU execution has been performed. Hardware campaigns and empirical claims must remain pending until measured. The pre-existing README and roadmap edits are included in S00.
@@ -28,7 +28,9 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S02: complete JSON model artifacts include preprocessing, classes, split indices, dataset checksum, and integrity ID. Fresh-process inference roundtrip and training-only preprocessing verified. Examples now use 60/20/20 splits with fixed split seed; `validation_size=0` retains legacy API splits. 25 tests passed (one optional skip).
 - S03: `qdt train` and `qdt predict` implemented; prediction defaults to validation and reuses a frozen model. Separate split/optimizer/simulator/transpiler seeds and per-node optimizer traces are recorded. CLI roundtrip, non-overwrite, and budget checks added; 26 tests passed (one optional skip). See `docs/experiment_guide.md`.
 - S04: cached disjoint-copy templates, explicit little-endian marginals, partial batches, independent request/packing settings, and Aer CPU/GPU/method selection implemented. Fusion enabled for fair native baselines. 29 tests passed with two skips; actual GPU smoke validation remains pending on compatible hardware. See the GPU environment instructions in the experiment guide.
-- Next: S05 reusable execution records/counters and packed local hardware profiles; do not claim hardware or GPU measurements.
+- S05: Aer and profile adapters share packed execution and accounting. Raw counts, parameter rows, metadata, resolved configurations, checksums, timing, process peak RSS, and exact/shot counters are persisted. Packed profiles require explicit layouts and reject cross-partition/shared-resource routing. Independent asymmetric readout is supported. Automatic partition selection, correlated readout, GPU peak-memory measurement, and live QPU integration remain pending.
+- S05 verification: installed the existing IBM/IQM extras and ran all 31 tests; only the GPU check is skipped. This includes all bundled IQM profile/MOVE checks and explicit two-partition IBM-profile comparisons. Lint and formatting pass. No remote provider was contacted by these tests.
+- Next: S06 deterministic local campaigns, atomic artifacts, safe resumption, and analysis; then a small CPU pilot.
 
 ## 1. Research objective and scope
 
@@ -265,11 +267,11 @@ The IQM integration supports Qiskit circuits and provider-specific transpilation
 
 ### Checks and limitations
 
-- [ ] Copy-to-result correspondence survives transpilation.
+- [x] Copy-to-result correspondence survives transpilation.
 - [ ] Poorer-qubit effects are distinguished from simultaneous-execution effects.
 - [ ] Noise profiles are not presented as automatic crosstalk measurements.
 - [ ] Noisy simulations fit the available qubit and memory budget.
-- [ ] Shared hardware resources and routing constraints are included in feasibility checks.
+- [x] Shared hardware resources and routing constraints are included in feasibility checks.
 
 Dense simulation of a composite circuit may use memory proportional to `2^(B*n)` for a statevector and `4^(B*n)` for a density matrix. Independent states instead require `B*2^n` or `B*4^n`, before overheads. Use independent-state simulation as an HPC baseline. Monolithic simulation can characterize a limit, but must not be the only comparison. Factorization is not generally exact when noise couples partitions.
 
@@ -303,11 +305,11 @@ Dense simulation of a composite circuit may use memory proportional to `2^(B*n)`
 
 ### Checks
 
-- [ ] Counters match a small example that can be checked manually.
-- [ ] Overlapping asynchronous intervals are not double-counted.
+- [x] Counters match a small example that can be checked manually.
+- [x] Overlapping asynchronous intervals are not double-counted.
 - [ ] GPU timing waits for relevant operations to finish.
-- [ ] End-to-end time is measured directly in addition to component timings.
-- [ ] Metrics can be recomputed from raw results.
+- [x] End-to-end time is measured directly in addition to component timings.
+- [x] Metrics can be recomputed from raw results.
 - [ ] Metadata distinguishes CPU, single-GPU, and multi-GPU execution.
 
 ## 9. M5 — Prepare resumable campaigns and an operational interface

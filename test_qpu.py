@@ -236,6 +236,37 @@ class QPUProfileTests(unittest.TestCase):
             noisy.probabilities(ROWS[:2]), [0.5, 0.5], atol=1e-12
         )
 
+    def test_packed_profile_marginals_and_explicit_partition_constraints(self):
+        backend = GenericBackendV2(
+            4,
+            basis_gates=["ry", "rz", "cx"],
+            coupling_map=[[0, 1], [1, 0], [2, 3], [3, 2]],
+            seed=7,
+        )
+        noise = NoiseModel()
+        noise.add_readout_error(ReadoutError([[0.9, 0.1], [0.2, 0.8]]), [1])
+        noise.add_readout_error(ReadoutError([[0.8, 0.2], [0.3, 0.7]]), [3])
+        profile = Profile(backend.target, noise, {"source": "ibm:partition-test"})
+        rows = np.vstack([ROWS, ROWS[:2]])
+        config = Config(
+            circuit=PAIR, fake_qpu="ibm:test", packing_factor=2, qpu_layout=[0, 1, 2, 3]
+        )
+        with patch("qdt.adapters.qpu_run.load_profile", return_value=profile):
+            packed = get_adapter(config)
+            p = packed.probabilities(rows, 2)
+            for i in range(2):
+                isolated = get_adapter(
+                    replace(config, packing_factor=1, qpu_layout=[2 * i, 2 * i + 1])
+                )
+                np.testing.assert_allclose(
+                    p[i::2], isolated.probabilities(rows[i::2]), atol=1e-12
+                )
+            sampled = get_adapter(replace(config, shots=8192))
+            np.testing.assert_allclose(sampled.probabilities(rows, 2), p, atol=0.03)
+            self.assertEqual(packed.profile_metadata["physical_readouts"], [1, 3])
+            with self.assertRaisesRegex(ValueError, "explicit disjoint"):
+                get_adapter(replace(config, qpu_layout=None))
+
     def test_cli_local_profile_end_to_end(self):
         with tempfile.TemporaryDirectory() as folder:
             profile_path = Path(folder) / "ibm.json"

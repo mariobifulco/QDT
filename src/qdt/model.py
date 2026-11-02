@@ -9,9 +9,13 @@ import numpy as np
 
 from .config import Config
 from .data import Preprocessing
+from .qpu import _json_default
 from .quantum_tree import QNode, predict
 
 EXECUTION_FIELDS = {
+    "max_memory_mb",
+    "parallel_experiments",
+    "parallel_shots",
     "packing_factor",
     "aer_device",
     "aer_method",
@@ -65,7 +69,9 @@ class Model:
     @property
     def model_id(self):
         return hashlib.sha256(
-            json.dumps(self.payload(), sort_keys=True, allow_nan=False).encode()
+            json.dumps(
+                self.payload(), sort_keys=True, allow_nan=False, default=_json_default
+            ).encode()
         ).hexdigest()
 
     def save(self, path):
@@ -74,7 +80,7 @@ class Model:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("x") as handle:
-            json.dump(payload, handle, indent=2, allow_nan=False)
+            json.dump(payload, handle, indent=2, allow_nan=False, default=_json_default)
             handle.write("\n")
 
     @classmethod

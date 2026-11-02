@@ -41,5 +41,8 @@
   "transpiler_seed": 0,
   "packing_factor": 1,
   "aer_device": "CPU",
-  "aer_method": "automatic"
+  "aer_method": "automatic",
+  "max_memory_mb": 4096,
+  "parallel_experiments": 1,
+  "parallel_shots": 1
 }

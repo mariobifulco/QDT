@@ -49,6 +49,23 @@ class PackingTests(unittest.TestCase):
         for inst in qc.data:
             self.assertEqual(len({qc.find_bit(q).index // 2 for q in inst.qubits}), 1)
 
+    def test_resource_accounting_and_reconstructible_counts(self):
+        config = Config(circuit=CIRCUIT, packing_factor=4, shots=512)
+        adapter = Adapter(config)
+        p = adapter.probabilities(ROWS, 3)
+        self.assertEqual(adapter.statistics["backend_requests"], 2)
+        self.assertEqual(adapter.statistics["composite_circuits"], 3)
+        self.assertEqual(adapter.statistics["composite_shots"], 3 * 512)
+        self.assertEqual(adapter.statistics["logical_shots"], 11 * 512)
+        decoded = []
+        for request in adapter.records:
+            for experiment in request["experiments"]:
+                decoded.extend(
+                    marginal_zeros(experiment["counts"], request["active_packing"])
+                )
+                self.assertEqual(experiment["metadata"]["device"], "CPU")
+        np.testing.assert_allclose(decoded, p)
+
     def test_gpu_request_never_falls_back_to_cpu(self):
         with patch.object(AerSimulator, "available_devices", return_value=("CPU",)):
             with self.assertRaisesRegex(ValueError, "GPU is unavailable"):
