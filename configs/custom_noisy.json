@@ -44,5 +44,7 @@
   "aer_method": "automatic",
   "max_memory_mb": 4096,
   "parallel_experiments": 1,
-  "parallel_shots": 1
+  "parallel_shots": 1,
+  "synthetic_samples": 600,
+  "data_seed": 1729
 }

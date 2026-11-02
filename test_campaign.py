@@ -103,6 +103,19 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(result["quality_difference_ci95"], [0.1, 0.1])
         self.assertEqual(result["speedup_ci95"], [2.0, 2.0])
 
+    def test_unfinished_plans_reject_source_changes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root, manifest_path, _ = self.prepare(folder)
+            campaign = plan(manifest_path)
+            write_json(root / "plan.json", campaign)
+            with patch(
+                "qdt.campaign.provenance",
+                return_value={**campaign["provenance"], "source_sha256": "changed"},
+            ):
+                with self.assertRaisesRegex(ValueError, "Code or environment changed"):
+                    execute(root / "plan.json")
+            self.assertFalse(list(root.glob("runs/*/attempt-*")))
+
     def test_limits_and_atomic_json(self):
         with tempfile.TemporaryDirectory() as folder:
             root, manifest_path, manifest = self.prepare(folder)

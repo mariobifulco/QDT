@@ -212,12 +212,23 @@ def execute(plan_path, *, recover_stale=False):
                 (datetime.now(UTC) - datetime.fromisoformat(started)).total_seconds(),
             )
     summary = {"completed": 0, "skipped": 0, "failed": 0, "budget_stop": False}
+    current_environment = None
     for run in campaign["runs"]:
         if file_checksum(run["model_path"]) != run["model_sha256"]:
             raise ValueError("Frozen model file changed since planning")
         if completed_result(plan_path.parent, run) is not None:
             summary["skipped"] += 1
             continue
+        if current_environment is None:
+            current_environment = provenance()
+        keys = ("source_sha256", "versions", "python", "platform", "lockfile_sha256")
+        if any(
+            current_environment.get(key) != campaign["provenance"].get(key)
+            for key in keys
+        ):
+            raise ValueError(
+                "Code or environment changed since planning; create a new plan in a new output directory"
+            )
         if (
             spent_seconds + time.monotonic() - start
             >= campaign["limits"]["max_seconds"]

@@ -38,11 +38,16 @@ def provenance():
         "numpy",
         "scipy",
         "scikit-learn",
+        "iqm-client",
+        "qiskit-ibm-runtime",
     ):
         try:
             versions[name] = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
             versions[name] = None
+    source = hashlib.sha256()
+    for path in sorted((root / "src" / "qdt").rglob("*.py")):
+        source.update(str(path.relative_to(root)).encode() + b"\0" + path.read_bytes())
     lock = root / "uv.lock"
     return {
         "commit": git("rev-parse", "HEAD"),
@@ -50,6 +55,7 @@ def provenance():
         "python": platform.python_version(),
         "platform": platform.platform(),
         "versions": versions,
+        "source_sha256": source.hexdigest(),
         "lockfile_sha256": hashlib.sha256(lock.read_bytes()).hexdigest()
         if lock.exists()
         else None,
@@ -111,7 +117,13 @@ def train_model(config):
                 "logical_circuits": adapter.circuits,
                 "seeds": {
                     stage: config.seed_for(stage)
-                    for stage in ("split", "optimizer", "simulator", "transpiler")
+                    for stage in (
+                        "data",
+                        "split",
+                        "optimizer",
+                        "simulator",
+                        "transpiler",
+                    )
                 },
             },
         },

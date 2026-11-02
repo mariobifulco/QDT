@@ -11,6 +11,8 @@ class Config:
     circuit: Circuit
     backend: str = "aer"
     dataset: str = "iris"
+    synthetic_samples: int = 600
+    data_seed: int = 1729
     data_dir: str = "datasets"
     seed: int = 42
     validation_size: float = (
@@ -47,6 +49,8 @@ class Config:
     def __post_init__(self):
         for name in (
             "seed",
+            "synthetic_samples",
+            "data_seed",
             "split_seed",
             "optimizer_seed",
             "simulator_seed",
@@ -82,6 +86,10 @@ class Config:
             raise ValueError("circuit must be a Circuit or its JSON definition")
         if min(self.max_memory_mb, self.parallel_experiments, self.parallel_shots) < 1:
             raise ValueError("Aer memory and parallelism limits must be positive")
+        if self.synthetic_samples < 20 or self.data_seed < 0:
+            raise ValueError(
+                "synthetic_samples must be >= 20 and data_seed nonnegative"
+            )
         if self.packing_factor < 1:
             raise ValueError("packing_factor must be positive")
         if self.aer_device not in {"CPU", "GPU"}:

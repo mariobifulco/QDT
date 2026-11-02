@@ -122,3 +122,9 @@ uv run --extra analysis qdt analyze --plan results/cpu-pilot/campaign/plan.json 
 Preserve raw results and model artifacts locally. They are ignored by Git and must be included explicitly in a later publication archive. To run elsewhere, train new models there and resolve a new plan from the manifest; resolved plans contain absolute artifact paths.
 
 On systems with slow system-font discovery, the tested Matplotlib version can use bundled fonts by setting `MPL_IGNORE_SYSTEM_FONTS=1`; set `MPLCONFIGDIR` to a writable cache directory. These settings affect figure generation, not simulation measurements. The first CPU pilot is documented in `docs/pilots/cpu_pilot_20261102.md`.
+
+## Scalable synthetic data and compatibility
+
+For `synthetic` or `synthetic_xor`, set `synthetic_samples` (at least 20) and `data_seed` in the training configuration. These settings control data generation independently of optimizer initialization. Save the resulting checksum and exact split indices with each model. Changing the number of training samples alone is not the same experiment as changing the generated dataset size.
+
+Saved schema-v1 model identities preserve their original configuration fields when newer defaults are added. The earlier CPU pilot models still load with their original IDs. This supports reading old artifacts, not silently mixing code revisions in an unfinished campaign: starting new work from a plan checks source, dependency lock, package versions, Python, and platform. If those change, create a new plan in a fresh output directory. Completed old results remain verifiable and analyzable without rerunning them.

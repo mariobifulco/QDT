@@ -142,15 +142,17 @@ def load_dataset(config):
         X, y = load_uci(config.dataset, config.data_dir)
     elif config.dataset == "synthetic":
         X, y = make_classification(
-            n_samples=600,
+            n_samples=config.synthetic_samples,
             n_features=100,
             n_informative=5,
             n_redundant=5,
             n_clusters_per_class=1,
-            random_state=1729,
+            random_state=config.data_seed,
         )
     elif config.dataset == "synthetic_xor":
-        X = np.random.default_rng(1729).uniform(-1, 1, (600, 20))
+        X = np.random.default_rng(config.data_seed).uniform(
+            -1, 1, (config.synthetic_samples, 20)
+        )
         y = ((X[:, 0] > 0) ^ (X[:, 1] > 0)).astype(int)
     else:
         raise ValueError(f"Unknown dataset: {config.dataset}")

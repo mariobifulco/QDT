@@ -64,6 +64,7 @@ class Model:
     tree: QNode
     classes: list[int]
     data: dict
+    config_fields: tuple[str, ...] | None = None
 
     def execution_config(self, overrides=None):
         overrides = overrides or {}
@@ -82,7 +83,12 @@ class Model:
     def payload(self):
         return {
             "schema_version": 1,
-            "config": asdict(self.config),
+            # Keep saved schema-v1 identities stable when Config gains new defaults.
+            "config": {
+                key: value
+                for key, value in asdict(self.config).items()
+                if self.config_fields is None or key in self.config_fields
+            },
             "preprocessing": asdict(self.preprocessing),
             "tree": asdict(self.tree),
             "classes": self.classes,
@@ -153,7 +159,12 @@ class Model:
             return result
 
         model = cls(
-            config, preprocessing, node(payload["tree"]), classes, payload["data"]
+            config,
+            preprocessing,
+            node(payload["tree"]),
+            classes,
+            payload["data"],
+            tuple(payload["config"]),
         )
         if model.model_id != payload.get("model_id"):
             raise ValueError("Model checksum mismatch")

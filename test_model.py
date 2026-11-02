@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 import sys
@@ -62,7 +63,13 @@ class ModelTests(unittest.TestCase):
                     self.assertIn("message", event)
             self.assertEqual(
                 model.data["training"]["seeds"],
-                {"split": 7, "optimizer": 11, "simulator": 13, "transpiler": 17},
+                {
+                    "data": 1729,
+                    "split": 7,
+                    "optimizer": 11,
+                    "simulator": 13,
+                    "transpiler": 17,
+                },
             )
             subprocess.run(
                 [
@@ -94,6 +101,44 @@ class ModelTests(unittest.TestCase):
                     capture_output=True,
                 ).returncode,
                 0,
+            )
+
+    def test_synthetic_scaling_and_additive_config_compatibility(self):
+        config = Config(
+            circuit=TEST_CIRCUIT,
+            dataset="synthetic_xor",
+            synthetic_samples=120,
+            data_seed=19,
+            validation_size=0.2,
+            max_evals=8,
+            restarts=1,
+            max_depth=0,
+        )
+        data = prepare_dataset(config)
+        self.assertEqual(len(load_dataset(config)[0]), 120)
+        self.assertEqual(data.dataset_sha256, prepare_dataset(config).dataset_sha256)
+        self.assertNotEqual(
+            data.dataset_sha256,
+            prepare_dataset(replace(config, data_seed=20)).dataset_sha256,
+        )
+        from qdt.quantum_tree import QNode
+
+        model = Model(config, data.preprocessing, QNode(value=0), [0, 1], {})
+        payload = model.payload()
+        del payload["config"]["synthetic_samples"]
+        del payload["config"]["data_seed"]
+        payload["model_id"] = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, allow_nan=False).encode()
+        ).hexdigest()
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "old-model.json"
+            path.write_text(json.dumps(payload))
+            restored = Model.load(path)
+            self.assertEqual(restored.model_id, payload["model_id"])
+            self.assertEqual(restored.config.synthetic_samples, 600)
+            restored.save(Path(folder) / "resaved.json")
+            self.assertEqual(
+                Model.load(Path(folder) / "resaved.json").model_id, restored.model_id
             )
 
     def test_frozen_model_roundtrip_and_training_only_preprocessing(self):
