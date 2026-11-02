@@ -1,0 +1,119 @@
+{
+  "campaign_id": "288967f2e25b21109977",
+  "source_commit": "9fbbbc8148d6acc62c9ae2600b55ed185885a4fe",
+  "completed_runs": 24,
+  "failed_attempts": 0,
+  "models": [
+    {
+      "model_id": "f597f32a6f132864dee22138f31bf0a2dbe2b4c8f9937ff01b3a9fda6ea567ca",
+      "dataset_sha256": "25e2eb7b7a8745b1bde5ba18bc4969983d2e2f403291ecd5bde4a29ef30c3859"
+    },
+    {
+      "model_id": "cec8fe4fc3a0fb17b59f7ad1b988c06d6d78e446e5409e15c3d9967ae0bc01aa",
+      "dataset_sha256": "25e2eb7b7a8745b1bde5ba18bc4969983d2e2f403291ecd5bde4a29ef30c3859"
+    }
+  ],
+  "comparisons": [
+    {
+      "dataset": "breast_cancer",
+      "name": "native_batch",
+      "reference": "sequential",
+      "paired_models": 2,
+      "mean_quality_difference": 0.0,
+      "quality_difference_ci95": [
+        0.0,
+        0.0
+      ],
+      "median_speedup": 1.8607214173332483,
+      "speedup_ci95": [
+        1.8120734795790059,
+        1.9093693550874906
+      ]
+    },
+    {
+      "dataset": "breast_cancer",
+      "name": "packed_2",
+      "reference": "sequential",
+      "paired_models": 2,
+      "mean_quality_difference": 0.0,
+      "quality_difference_ci95": [
+        0.0,
+        0.0
+      ],
+      "median_speedup": 1.9474321178949443,
+      "speedup_ci95": [
+        1.8840435873678958,
+        2.010820648421993
+      ]
+    },
+    {
+      "dataset": "breast_cancer",
+      "name": "packed_4",
+      "reference": "sequential",
+      "paired_models": 2,
+      "mean_quality_difference": 0.0,
+      "quality_difference_ci95": [
+        0.0,
+        0.0
+      ],
+      "median_speedup": 1.891678033064267,
+      "speedup_ci95": [
+        1.800335563889034,
+        1.9830205022395002
+      ]
+    },
+    {
+      "dataset": "breast_cancer",
+      "name": "sampled_1",
+      "reference": "sequential",
+      "paired_models": 2,
+      "mean_quality_difference": -0.013388470357025839,
+      "quality_difference_ci95": [
+        -0.020962987225679575,
+        -0.005813953488372103
+      ],
+      "median_speedup": 1.5071979406850216,
+      "speedup_ci95": [
+        1.493577259476283,
+        1.5208186218937598
+      ]
+    },
+    {
+      "dataset": "breast_cancer",
+      "name": "sampled_4",
+      "reference": "sequential",
+      "paired_models": 2,
+      "mean_quality_difference": 0.0029069767441860517,
+      "quality_difference_ci95": [
+        -0.005813953488372103,
+        0.011627906976744207
+      ],
+      "median_speedup": 1.8096134325748532,
+      "speedup_ci95": [
+        1.7791207231697783,
+        1.840106141979928
+      ]
+    },
+    {
+      "dataset": "breast_cancer",
+      "name": "sequential",
+      "reference": "sequential",
+      "paired_models": 2,
+      "mean_quality_difference": 0.0,
+      "quality_difference_ci95": [
+        0.0,
+        0.0
+      ],
+      "median_speedup": 1.0,
+      "speedup_ci95": [
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "artifact_checksums": {
+    "campaign/plan.json": "697b596aae7cae04ff311fab741300325213da2db2e6e31cb0af764426569e06",
+    "analysis/comparisons.json": "e9215b2f240a427d91708e228d2554795866eee57d65e0edb14fa9bc3ca4da21",
+    "analysis/quality_time.png": "db80587433ad24e887c935038318397a62133c6ba628699f12aa48790d41b468"
+  }
+}

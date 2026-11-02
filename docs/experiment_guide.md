@@ -120,3 +120,5 @@ uv run --extra analysis qdt analyze --plan results/cpu-pilot/campaign/plan.json 
 ```
 
 Preserve raw results and model artifacts locally. They are ignored by Git and must be included explicitly in a later publication archive. To run elsewhere, train new models there and resolve a new plan from the manifest; resolved plans contain absolute artifact paths.
+
+On systems with slow system-font discovery, the tested Matplotlib version can use bundled fonts by setting `MPL_IGNORE_SYSTEM_FONTS=1`; set `MPLCONFIGDIR` to a writable cache directory. These settings affect figure generation, not simulation measurements. The first CPU pilot is documented in `docs/pilots/cpu_pilot_20261102.md`.
