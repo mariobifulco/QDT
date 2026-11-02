@@ -103,3 +103,20 @@ uv run --extra analysis qdt analyze --plan results/pilot/plan.json --output resu
 Use a new or empty output directory. Analysis checks completion/result integrity and recomputes metrics from stored predictions. It produces `runs.csv`, `comparisons.json`, and `report.md`; `--plots` additionally creates standard quality–time PDF/PNG scatter plots using the optional Matplotlib dependency. No model training, circuit execution, or QPU access is needed.
 
 Timing repetitions are collapsed within each model. Quality differences and time ratios are paired by frozen model, separately for each dataset. Confidence intervals use 2,000 model-level bootstrap samples with a fixed seed; one-model comparisons have no confidence interval. Small exploratory samples do not establish non-inferiority. Incomplete campaigns are rejected unless explicitly requested with `--allow-incomplete`; missing runs and failure counts remain in the report.
+
+## Reproduce the local CPU smoke campaign
+
+These definitions deliberately use two model initializations, one shallow two-qubit QDT, 40 training samples, a fixed split, and two timing repetitions. They validate the pipeline and provide exploratory observations, not final scientific evidence. The manifest includes sequential/native-batch/packed exact execution and finite-shot isolated/packed execution.
+
+Use a fresh `results/cpu-pilot` directory; existing artifacts are never overwritten:
+
+```sh
+uv run qdt train --config configs/campaigns/cpu_pilot_training.json --seed 0 --output results/cpu-pilot/models/seed-0.json
+uv run qdt train --config configs/campaigns/cpu_pilot_training.json --seed 1 --output results/cpu-pilot/models/seed-1.json
+uv run qdt campaign plan --manifest configs/campaigns/cpu_pilot.json --output results/cpu-pilot/campaign/plan.json
+uv run qdt campaign run --plan results/cpu-pilot/campaign/plan.json
+uv run qdt campaign verify --plan results/cpu-pilot/campaign/plan.json
+uv run --extra analysis qdt analyze --plan results/cpu-pilot/campaign/plan.json --output results/cpu-pilot/analysis --reference sequential --plots
+```
+
+Preserve raw results and model artifacts locally. They are ignored by Git and must be included explicitly in a later publication archive. To run elsewhere, train new models there and resolve a new plan from the manifest; resolved plans contain absolute artifact paths.

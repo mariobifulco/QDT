@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "models": [
+    "../../results/cpu-pilot/models/seed-0.json",
+    "../../results/cpu-pilot/models/seed-1.json"
+  ],
+  "split": "validation",
+  "repetitions": 2,
+  "executions": [
+    {
+      "name": "sequential",
+      "overrides": {
+        "packing_factor": 1,
+        "batch_size": 1
+      }
+    },
+    {
+      "name": "native_batch",
+      "overrides": {
+        "packing_factor": 1,
+        "batch_size": 32
+      }
+    },
+    {
+      "name": "packed_2",
+      "overrides": {
+        "packing_factor": 2,
+        "batch_size": 32
+      }
+    },
+    {
+      "name": "packed_4",
+      "overrides": {
+        "packing_factor": 4,
+        "batch_size": 32
+      }
+    },
+    {
+      "name": "sampled_1",
+      "overrides": {
+        "packing_factor": 1,
+        "batch_size": 32,
+        "shots": 512
+      }
+    },
+    {
+      "name": "sampled_4",
+      "overrides": {
+        "packing_factor": 4,
+        "batch_size": 32,
+        "shots": 512
+      }
+    }
+  ],
+  "limits": {
+    "max_runs": 24,
+    "max_logical_shots": 1000000,
+    "max_seconds": 600
+  }
+}
