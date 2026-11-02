@@ -223,3 +223,6 @@ These commands currently use one coordinator and one allocated GPU. Independent 
 Campaign manifests may specify `max_samples` to limit the first validation/test rows for a control study. The exact selected indices and limit are frozen in each run specification, used in budget estimates, and verified against completed results. Small prefixes are exploratory control inputs, not a full-dataset generalization estimate.
 
 New plans include an execution-environment fingerprint in each run ID. This distinguishes identical settings collected with different source/dependency environments. Old completed plans remain readable for analysis; unfinished work must still match its original source and environment.
+
+
+Current IBM calibration snapshots may also advertise `xslow`, `measure_2`, `reset_2`, `measure_reset`, and `measure_reset_2`. The local reader explicitly excludes these specialized instructions from its static simulation target and records `excluded_native_instructions` in profile metadata. Standard gates retain their original calibration/noise information; the raw snapshot is unchanged. Unknown unsupported instructions still raise an error. These simulations do not evaluate the excluded operations or hardware crosstalk.

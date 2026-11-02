@@ -26,7 +26,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S10 — Implement the IBM live QPU adapter and durable job recovery | Implemented; live validation pending | `feat: add budgeted IBM inference with durable job recovery` |
 | S10b — Prepare the NVIDIA Slurm launch path | Implemented; cluster validation pending | `feat: prepare isolated Aer GPU environments and Slurm workflows` |
 | S11a — Freeze CPU control inputs and execution identity | Complete | `feat: freeze campaign sample limits and execution identity` |
-| S11b — Define CPU noise/profile campaigns | Next | User requested CPU-only execution |
+| S11b — Load current IBM snapshots for static CPU simulation | Complete | `fix: support static simulation of current IBM profiles` |
+| S11c — Define CPU noise/profile campaigns | Next | User requested CPU-only execution |
 | S11-remote — GPU/HPC and real-QPU pilots | Deferred by user | Prepare code only; no remote jobs |
 | S12 — Confirmatory policy study, final campaign, and paper | Pending scientific evidence | M8–M11 |
 
@@ -56,7 +57,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S10b verification: 44 tests passed with one GPU skip; Linux GPU dependency dry resolution succeeded without installing GPU packages on the Mac. Slurm argument/thread forwarding, shell syntax, lint, formatting, and the earlier 24-run artifact verification pass.
 - Current user instruction: prepare GPU/IBM code but execute computations locally on CPU only. Remote GPU/HPC and QPU jobs are deferred; no further hardware-access or job-budget decision is needed for the current CPU phase.
 - S11a: campaign sample limits, exact input indices, budget bounds, and environment fingerprints are frozen in run identities. Completed-result checks validate indices/environment as well as configuration and file checksums. Seven campaign tests pass.
-- Next: S11b small CPU-only noise/profile campaign definitions and analysis. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
+- S11b: downloaded IBM calibration metadata for local Aer use only; no quantum circuit was submitted. The current snapshot advertises specialized instructions beyond the static simulator gate subset. The loader now reports explicit exclusions and still rejects unknown unsupported gates. Nine profile tests pass, including current-instruction projection.
+- Next: S11c small CPU-only noise/profile campaign definitions and analysis. Independent multi-GPU scheduling, GPU memory telemetry, remote campaign coordination, final study collection, adaptive scheduling, full-text novelty review, and manuscript results remain unfinished.
 
 ## 1. Research objective and scope
 

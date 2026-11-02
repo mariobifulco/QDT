@@ -217,6 +217,7 @@ def read_profile(path):
         raise ValueError(
             "IBM library snapshots are disabled; fetch a profile from an online QPU"
         )
+    excluded = set()
     if data.get("iqm_compiler"):
         profile = load_profile(data["iqm_compiler"])
     else:
@@ -225,6 +226,15 @@ def read_profile(path):
         grouped = {}
         for entry in data["instructions"]:
             name = entry["name"]
+            if name in {
+                "xslow",
+                "measure_2",
+                "reset_2",
+                "measure_reset",
+                "measure_reset_2",
+            }:
+                excluded.add(name)
+                continue
             if name not in gates:
                 raise ValueError(f"Snapshot contains unsupported native gate {name!r}")
             locus = None if entry["qubits"] is None else tuple(entry["qubits"])
@@ -238,7 +248,9 @@ def read_profile(path):
     import hashlib
 
     profile.metadata = dict(
-        data["metadata"], snapshot_sha256=hashlib.sha256(raw).hexdigest()
+        data["metadata"],
+        snapshot_sha256=hashlib.sha256(raw).hexdigest(),
+        excluded_native_instructions=sorted(excluded),
     )
     return profile
 

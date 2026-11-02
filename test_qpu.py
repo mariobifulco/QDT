@@ -277,6 +277,35 @@ class QPUProfileTests(unittest.TestCase):
                 automatic.profile_metadata["partition_selection"], "greedy"
             )
 
+    def test_current_ibm_specialized_instructions_are_reported_as_excluded(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "profile.json"
+            write_profile(ibm_test_profile(), path)
+            payload = json.loads(path.read_text())
+            names = [
+                "xslow",
+                "measure_2",
+                "reset_2",
+                "measure_reset",
+                "measure_reset_2",
+            ]
+            for name in names:
+                payload["instructions"].append(
+                    {"name": name, "qubits": [0], "duration": 1e-6, "error": 0.01}
+                )
+            path.write_text(json.dumps(payload))
+            profile = load_profile(f"file:{path}")
+            self.assertEqual(
+                profile.metadata["excluded_native_instructions"], sorted(names)
+            )
+            self.assertTrue(set(names).isdisjoint(profile.target.operation_names))
+            adapter = get_adapter(Config(circuit=PAIR, fake_qpu=f"file:{path}"))
+            self.assertTrue(np.isfinite(adapter.probabilities(ROWS)).all())
+            payload["instructions"][-1]["name"] = "unknown_native_gate"
+            path.write_text(json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, "unsupported native gate"):
+                load_profile(f"file:{path}")
+
     def test_cli_local_profile_end_to_end(self):
         with tempfile.TemporaryDirectory() as folder:
             profile_path = Path(folder) / "ibm.json"
