@@ -18,6 +18,10 @@ from .quantum_tree import fit, predict
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "campaign":
+        from .campaign import main as campaign_main
+
+        return campaign_main(argv[1:])
     if argv and argv[0] in {"train", "predict"}:
         from .experiment import main as experiment_main
 

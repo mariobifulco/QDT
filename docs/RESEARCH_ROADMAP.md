@@ -16,7 +16,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S03 — Separate training/inference and capture optimizer traces | Complete | `feat: separate training and frozen inference with optimizer traces` |
 | S04 — Implement Aer spatial packing and CPU/GPU selection | Implemented; GPU validation pending | `feat: add disjoint circuit packing and explicit Aer devices` |
 | S05 — Instrument execution and support packed hardware profiles | Implemented; automatic partitions and hardware validation pending | `feat: record execution costs and simulate packed hardware profiles` |
-| S06 — Implement resumable local campaigns and analysis | Next | M5 |
+| S06a — Implement resumable local campaigns | Complete | `feat: add immutable local campaigns and safe resumption` |
+| S06b — Add paired analysis and run a CPU pilot | Next | M5–M6 |
 | S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
 
 Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only. No GPU benchmark or real QPU execution has been performed. Hardware campaigns and empirical claims must remain pending until measured. The pre-existing README and roadmap edits are included in S00.
@@ -30,7 +31,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S04: cached disjoint-copy templates, explicit little-endian marginals, partial batches, independent request/packing settings, and Aer CPU/GPU/method selection implemented. Fusion enabled for fair native baselines. 29 tests passed with two skips; actual GPU smoke validation remains pending on compatible hardware. See the GPU environment instructions in the experiment guide.
 - S05: Aer and profile adapters share packed execution and accounting. Raw counts, parameter rows, metadata, resolved configurations, checksums, timing, process peak RSS, and exact/shot counters are persisted. Packed profiles require explicit layouts and reject cross-partition/shared-resource routing. Independent asymmetric readout is supported. Automatic partition selection, correlated readout, GPU peak-memory measurement, and live QPU integration remain pending.
 - S05 verification: installed the existing IBM/IQM extras and ran all 31 tests; only the GPU check is skipped. This includes all bundled IQM profile/MOVE checks and explicit two-partition IBM-profile comparisons. Lint and formatting pass. No remote provider was contacted by these tests.
-- Next: S06 deterministic local campaigns, atomic artifacts, safe resumption, and analysis; then a small CPU pilot.
+- S06a: immutable plans, deterministic run IDs, dry validation, atomic non-overwriting JSON, per-attempt records, integrity checks, same-host stale-claim recovery, conservative retry shot reservations, and between-run time limits implemented for one local coordinator. Interruption/resumption and corruption tests pass. Live QPU orchestration, parallel campaign workers, and hard within-run deadlines are not implemented.
+- Next: S06b paired campaign analysis and a small CPU-only pilot. Use the implemented campaign commands in `docs/experiment_guide.md`.
 
 ## 1. Research objective and scope
 
@@ -344,7 +346,7 @@ These are operations to implement, not existing commands. Choose final command n
 
 ### Completion criteria
 
-- [ ] A small local campaign can be interrupted and resumed without losing or overwriting results.
+- [x] A small local campaign can be interrupted and resumed without losing or overwriting results.
 - [ ] Mocked hardware jobs cover submission, retrieval, failure, and resumption without credentials.
 - [ ] The documented CPU example works from a clean checkout with resolved dependencies.
 - [ ] GPU installation and validation instructions work on the intended HPC platform.

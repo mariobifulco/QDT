@@ -17,8 +17,7 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
 from .adapters import get_adapter
 from .config import Config
 from .data import dataset_checksum, load_dataset, prepare_dataset
-from .model import Model
-from .qpu import _json_default
+from .model import Model, write_json
 from .quantum_tree import fit
 
 
@@ -81,14 +80,6 @@ def metrics(y, predictions):
     }
 
 
-def write_json(path, value):
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x") as handle:
-        json.dump(value, handle, indent=2, allow_nan=False, default=_json_default)
-        handle.write("\n")
-
-
 def train_model(config):
     start = time.perf_counter()
     data = prepare_dataset(config)
@@ -127,7 +118,9 @@ def train_model(config):
     )
 
 
-def evaluate(model, *, execution=None, split="validation", inputs=None):
+def evaluate(
+    model, *, execution=None, split="validation", inputs=None, records_output=None
+):
     start = time.perf_counter()
     config = model.execution_config(execution)
     y = None
@@ -146,7 +139,14 @@ def evaluate(model, *, execution=None, split="validation", inputs=None):
     adapter = get_adapter(config)
     setup_s = time.perf_counter() - setup
     prediction = time.perf_counter()
-    predictions = model.predict(X, execution=execution, adapter=adapter)
+    try:
+        predictions = model.predict(X, execution=execution, adapter=adapter)
+    finally:
+        if records_output is not None:
+            write_json(
+                records_output,
+                {"statistics": adapter.statistics, "backend_records": adapter.records},
+            )
     predict_s = time.perf_counter() - prediction
     result = {
         "schema_version": 1,
@@ -186,6 +186,11 @@ def main(argv):
         "--output", required=True, type=Path, help="Complete frozen model JSON"
     )
     train.add_argument("--validation-size", type=float)
+    train.add_argument(
+        "--seed",
+        type=int,
+        help="Fallback optimizer/simulator seed; explicit split seed stays fixed",
+    )
     infer = sub.add_parser("predict")
     infer.add_argument("--model", required=True, type=Path)
     infer.add_argument(
@@ -203,8 +208,12 @@ def main(argv):
         parser.error(f"Refusing to overwrite {args.output}")
     if args.command == "train":
         config = Config.load(args.config)
-        if args.validation_size is not None:
-            config = replace(config, validation_size=args.validation_size)
+        overrides = {
+            key: getattr(args, key)
+            for key in ("validation_size", "seed")
+            if getattr(args, key) is not None
+        }
+        config = replace(config, **overrides)
         model = train_model(config)
         model.save(args.output)
         print(f"Saved model {model.model_id} to {args.output}")

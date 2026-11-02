@@ -2,6 +2,8 @@
 
 import hashlib
 import json
+import os
+import tempfile
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
@@ -11,6 +13,27 @@ from .config import Config
 from .data import Preprocessing
 from .qpu import _json_default
 from .quantum_tree import QNode, predict
+
+
+def write_json(path, value):
+    """Publish a complete JSON artifact atomically without replacing an existing file."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", dir=path.parent, delete=False
+        ) as handle:
+            temporary = Path(handle.name)
+            json.dump(value, handle, indent=2, allow_nan=False, default=_json_default)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.link(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
 
 EXECUTION_FIELDS = {
     "max_memory_mb",
@@ -77,11 +100,7 @@ class Model:
     def save(self, path):
         payload = self.payload()
         payload["model_id"] = self.model_id
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("x") as handle:
-            json.dump(payload, handle, indent=2, allow_nan=False, default=_json_default)
-            handle.write("\n")
+        write_json(path, payload)
 
     @classmethod
     def load(cls, path):

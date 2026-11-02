@@ -60,3 +60,35 @@ The compiler must keep operations inside the declared partitions. Routing outsid
 Frozen-model training and inference outputs include backend request records with inputs, raw counts for finite shots, marginal probabilities, actual Aer metadata, and layout information. Counters distinguish logical evaluations, composite circuits, backend requests, composite shots, and logical marginal samples. Exact-probability references record zero physical shots, although Aer internally receives a dummy shot argument.
 
 `max_memory_mb` caps Aer memory; `parallel_experiments` and `parallel_shots` expose native execution limits alongside `threads`. CPU/GPU memory reporting currently includes process-lifetime peak RSS; GPU peak memory is explicitly unavailable rather than estimated. Raw training records currently remain inside the model JSON, which is simple but can become large; campaigns should archive these files and budget storage accordingly.
+
+## Resumable local campaigns
+
+Train frozen models first. A manifest uses paths relative to its own location:
+
+```json
+{
+  "schema_version": 1,
+  "models": ["model.json"],
+  "split": "validation",
+  "repetitions": 2,
+  "executions": [
+    {"name": "isolated", "overrides": {"packing_factor": 1, "batch_size": 32}},
+    {"name": "packed", "overrides": {"packing_factor": 4, "batch_size": 32}}
+  ],
+  "limits": {"max_runs": 20, "max_logical_shots": 1000000, "max_seconds": 3600}
+}
+```
+
+```sh
+uv run qdt campaign plan --manifest results/manifest.json --output results/pilot/plan.json
+uv run qdt campaign run --plan results/pilot/plan.json
+uv run qdt campaign verify --plan results/pilot/plan.json
+```
+
+Planning validates artifacts, datasets, configuration, device support, and profile layouts without calling `backend.run`. It resolves immutable run IDs and upper bounds from sample count and tree depth. Model contents and plans are checked for changes. Each repetition increments the resolved simulator seed; batching can still change random-number consumption, so counts across strategies are not expected to be identical.
+
+Run the same `campaign run` command to resume. Completed results are skipped only after checksum and identity checks. Each attempt keeps its specification, start/provenance, raw backend records where available, result or failure, duration, and completion checksum. Invalid or corrupted completed results raise an error instead of being silently accepted or overwritten.
+
+A campaign uses one coordinator. Per-run claims prevent duplicate execution. After a hard process interruption, `--recover-stale` can recover a claim only from the same host after checking that its recorded PID is absent. Claims from another host or a live PID are not removed automatically.
+
+The shot budget conservatively reserves each attempt's logical-shot upper bound, including failed attempts, before retrying. Time limits include recorded prior attempt durations; an unmeasured hard interruption conservatively reserves wall time since its start, including downtime. The deadline is checked between runs and does not interrupt an in-progress Aer call; use scheduler wall-time limits for a hard external cutoff. These are local simulation campaigns, not live QPU orchestration. Parallel campaign workers and global multi-GPU scheduling are not implemented.
