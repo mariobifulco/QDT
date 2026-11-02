@@ -75,6 +75,8 @@ def main(argv=None):
     config = replace(config, **overrides)
     if args.output and args.output.exists():
         parser.error(f"Refusing to overwrite {args.output}")
+    if config.backend != "aer":
+        parser.error("Use the frozen-model predict command for IBM inference")
     data = prepare_dataset(config)
     adapter = get_adapter(config)
     start = time.perf_counter()

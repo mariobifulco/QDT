@@ -46,5 +46,11 @@
   "parallel_experiments": 1,
   "parallel_shots": 1,
   "synthetic_samples": 600,
-  "data_seed": 1729
+  "data_seed": 1729,
+  "ibm_backend": null,
+  "job_journal": null,
+  "max_qpu_jobs": 0,
+  "max_qpu_shots": 0,
+  "qpu_timeout_s": 300,
+  "qpu_max_execution_time_s": 300
 }

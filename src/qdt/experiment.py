@@ -87,6 +87,10 @@ def metrics(y, predictions):
 
 
 def train_model(config):
+    if config.backend != "aer":
+        raise ValueError(
+            "Training uses local simulation; use predict for IBM inference"
+        )
     start = time.perf_counter()
     data = prepare_dataset(config)
     setup = time.perf_counter()
@@ -131,9 +135,17 @@ def train_model(config):
 
 
 def evaluate(
-    model, *, execution=None, split="validation", inputs=None, records_output=None
+    model,
+    *,
+    execution=None,
+    split="validation",
+    inputs=None,
+    records_output=None,
+    max_samples=None,
 ):
     start = time.perf_counter()
+    if max_samples is not None and (type(max_samples) is not int or max_samples < 1):
+        raise ValueError("max_samples must be a positive integer")
     config = model.execution_config(execution)
     y = None
     indices = None
@@ -141,12 +153,12 @@ def evaluate(
         X, labels = load_dataset(model.config)
         if dataset_checksum(X, labels) != model.data["dataset_sha256"]:
             raise ValueError("Dataset checksum differs from the frozen model")
-        indices = model.data["split_indices"][split]
+        indices = model.data["split_indices"][split][:max_samples]
         if not indices:
             raise ValueError(f"The frozen model has no {split} samples")
         X, y = X[indices], labels[indices]
     else:
-        X = inputs
+        X = inputs[:max_samples]
     setup = time.perf_counter()
     adapter = get_adapter(config)
     setup_s = time.perf_counter() - setup
@@ -205,6 +217,11 @@ def main(argv):
     )
     infer = sub.add_parser("predict")
     infer.add_argument("--model", required=True, type=Path)
+    infer.add_argument(
+        "--max-samples",
+        type=int,
+        help="Limit to the first N split/input rows for control runs",
+    )
     settings = infer.add_mutually_exclusive_group()
     settings.add_argument(
         "--execution", type=Path, help="JSON containing execution overrides only"
@@ -246,6 +263,7 @@ def main(argv):
             execution=execution,
             inputs=json.loads(args.inputs.read_text()) if args.inputs else None,
             split=args.split,
+            max_samples=args.max_samples,
         )
         result["policy_id"] = policy_id
         write_json(args.output, result)

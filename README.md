@@ -5,8 +5,10 @@ For the HPC–QPU circuit batching research plan, see the
 experiment protocols, result collection and paper preparation.
 
 QDT compares a quantum decision tree with a classical decision tree (CART) on
-classification datasets. All quantum circuits run locally, with or without noise,
-including simulations based on IQM and IBM device profiles.
+classification datasets. Aer supports CPU/GPU simulation, including local
+IQM/IBM device profiles.
+Frozen-model inference also supports budgeted IBM hardware execution with durable
+job recovery; see the [experiment guide](docs/experiment_guide.md).
 
 Install Python 3.11+ and [uv](https://docs.astral.sh/uv/), then run from the project
 directory:

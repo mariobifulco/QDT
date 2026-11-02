@@ -36,6 +36,12 @@ def write_json(path, value):
 
 
 EXECUTION_FIELDS = {
+    "ibm_backend",
+    "job_journal",
+    "max_qpu_jobs",
+    "max_qpu_shots",
+    "qpu_timeout_s",
+    "qpu_max_execution_time_s",
     "max_memory_mb",
     "parallel_experiments",
     "parallel_shots",

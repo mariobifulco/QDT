@@ -74,3 +74,46 @@ def select_layout(target, width, copies):
         layout.extend(chosen)
         available.difference_update(chosen)
     return tuple(layout)
+
+
+def compile_packed(config, copies, target, layout, iqm_backend=None):
+    from qiskit import ClassicalRegister, transpile
+
+    from .packing import compose_copies
+
+    qc, parameters, readouts = compose_copies(config.circuit, copies)
+    qc.add_register(ClassicalRegister(copies, "readout"))
+    qc.measure(readouts, range(copies))
+    layout = list(layout[: qc.num_qubits]) if layout else None
+    if layout and max(layout) >= target.num_qubits:
+        raise ValueError("qpu_layout exceeds the device qubit count")
+    if qc.num_qubits > target.num_qubits:
+        raise ValueError("Circuit exceeds the device qubit count")
+    options = {
+        "initial_layout": layout,
+        "seed_transpiler": config.transpiler_seed,
+        "optimization_level": 0,
+    }
+    if iqm_backend is not None:
+        from iqm.qiskit_iqm import transpile_to_IQM
+
+        compiled = transpile_to_IQM(qc, backend=iqm_backend, **options)
+    else:
+        compiled = transpile(qc, target=target, **options)
+    if copies > 1:
+        owners = {q: i // config.circuit.num_qubits for i, q in enumerate(layout)}
+        for inst in compiled.data:
+            wires = [compiled.find_bit(q).index for q in inst.qubits]
+            if (
+                any(q not in owners for q in wires)
+                or len({owners[q] for q in wires}) > 1
+            ):
+                raise ValueError(
+                    "Routing leaves the declared disjoint partitions or shares resources"
+                )
+            if (
+                inst.operation.name == "measure"
+                and owners[wires[0]] != compiled.find_bit(inst.clbits[0]).index
+            ):
+                raise ValueError("Compiled readout moved to another partition")
+    return compiled, parameters

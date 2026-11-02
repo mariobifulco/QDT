@@ -105,6 +105,10 @@ def plan(manifest_path):
                 raise ValueError("Unknown execution fields")
             overrides = execution.get("overrides", {})
             base = model.execution_config(overrides)
+            if base.backend != "aer":
+                raise ValueError(
+                    "Campaigns currently run local simulations; use predict with a unique IBM journal"
+                )
             # Validate feasibility and device support without calling backend.run.
             get_adapter(base)
             for repetition in range(repetitions):

@@ -3,11 +3,10 @@
 import time
 
 import numpy as np
-from qiskit import ClassicalRegister, QuantumCircuit, transpile
+from qiskit import QuantumCircuit
 from qiskit.quantum_info import Pauli
 
-from ..packing import compose_copies
-from ..partitions import select_layout
+from ..partitions import compile_packed, select_layout
 from ..qpu import load_profile, noise_from_dict
 from .qiskit_run import Adapter as AerAdapter
 from .qiskit_run import aer_backend
@@ -38,48 +37,17 @@ class Adapter(AerAdapter):
             return self.templates[copies]
         start = time.perf_counter()
         config, profile = self.config, self.profile
-        qc, parameters, readouts = compose_copies(self.circuit, copies)
-        qc.add_register(ClassicalRegister(copies))
-        qc.measure(readouts, range(copies))
         layout = (
-            list(self.selected_layout[: qc.num_qubits])
+            list(self.selected_layout[: copies * self.circuit.num_qubits])
             if self.selected_layout
             else None
         )
-        if layout and max(layout) >= profile.target.num_qubits:
-            raise ValueError("qpu_layout exceeds the device qubit count")
-        if qc.num_qubits > profile.target.num_qubits:
-            raise ValueError("Circuit exceeds the device qubit count")
-        options = {
-            "initial_layout": layout,
-            "seed_transpiler": config.transpiler_seed,
-            "optimization_level": 0,
-        }
-        if profile.iqm_backend is not None:
-            from iqm.qiskit_iqm import transpile_to_IQM
-
-            compiled = transpile_to_IQM(qc, backend=profile.iqm_backend, **options)
-        else:
-            compiled = transpile(qc, target=profile.target, **options)
+        compiled, parameters = compile_packed(
+            config, copies, profile.target, layout, profile.iqm_backend
+        )
         physical = sorted(
             {compiled.find_bit(q).index for inst in compiled.data for q in inst.qubits}
         )
-        if copies > 1:
-            owners = {q: i // self.circuit.num_qubits for i, q in enumerate(layout)}
-            for inst in compiled.data:
-                wires = [compiled.find_bit(q).index for q in inst.qubits]
-                if (
-                    any(q not in owners for q in wires)
-                    or len({owners[q] for q in wires}) > 1
-                ):
-                    raise ValueError(
-                        "Routing leaves the declared disjoint partitions or shares resources"
-                    )
-                if (
-                    inst.operation.name == "measure"
-                    and owners[wires[0]] != compiled.find_bit(inst.clbits[0]).index
-                ):
-                    raise ValueError("Compiled readout moved to another partition")
         mapping = {q: i for i, q in enumerate(physical)}
         template = QuantumCircuit(len(physical), copies)
         template.global_phase = compiled.global_phase

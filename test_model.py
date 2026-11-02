@@ -88,6 +88,22 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(result["model_id"], model.model_id)
             self.assertEqual(len(result["predictions"]), 30)
             self.assertEqual(model_path.read_bytes(), original)
+            limited = root / "limited.json"
+            subprocess.run(
+                [
+                    *command,
+                    "predict",
+                    "--model",
+                    str(model_path),
+                    "--max-samples",
+                    "4",
+                    "--output",
+                    str(limited),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            self.assertEqual(len(json.loads(limited.read_text())["predictions"]), 4)
             self.assertNotEqual(
                 subprocess.run(
                     [

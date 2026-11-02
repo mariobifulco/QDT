@@ -50,7 +50,12 @@ def _ibm_service():
     except ImportError as error:
         raise ImportError("IBM downloads require: uv sync --extra ibm") from error
     _load_credentials()
-    return QiskitRuntimeService()
+    options = {
+        key: os.environ[f"QISKIT_IBM_{key.upper()}"]
+        for key in ("token", "instance", "channel")
+        if os.environ.get(f"QISKIT_IBM_{key.upper()}")
+    }
+    return QiskitRuntimeService(**options)
 
 
 def list_online_ibm():

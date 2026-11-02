@@ -4,6 +4,8 @@ import numpy as np
 
 
 def get_adapter(config):
+    if config.backend == "ibm":
+        return import_module(".ibm_run", __name__).Adapter(config)
     if config.fake_qpu is not None:
         return import_module(".qpu_run", __name__).Adapter(config)
     return import_module(".qiskit_run", __name__).Adapter(config)

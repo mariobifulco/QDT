@@ -23,7 +23,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S07 — Add deterministic profile partition selection | Complete offline | `feat: select deterministic calibration-aware profile partitions` |
 | S08 — Preserve old model IDs and add scalable synthetic data | Complete | `feat: scale synthetic data and preserve frozen artifact compatibility` |
 | S09 — Add validation-only fixed-setting selection | Complete offline | `feat: select and apply validation-only fixed execution policies` |
-| S10 — Implement the IBM live QPU adapter and durable job recovery | Next | User selected IBM first |
+| S10 — Implement the IBM live QPU adapter and durable job recovery | Implemented; live validation pending | `feat: add budgeted IBM inference with durable job recovery` |
+| S10b — Prepare the NVIDIA Slurm launch path | Next | User identified an NVIDIA Slurm cluster |
 | S11 — GPU/HPC and real-QPU pilots | Pending external resources and budgets | M6–M7 |
 | S12 — Confirmatory policy study, final campaign, and paper | Pending scientific evidence | M8–M11 |
 
@@ -46,7 +47,9 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S08: synthetic sample count/data seed are configurable and independently recorded. Saved schema-v1 model IDs remain stable across additive Config defaults; the real S06 CPU pilot models were reloaded successfully. Unfinished campaigns now reject code/environment changes instead of silently mixing revisions; completed old results remain readable.
 - Final S09 verification: 39 tests passed with one GPU skip; lint and formatting pass.
 - S09: validation-only per-model fixed-setting selection, policy integrity/model matching, measured attempt/bookkeeping cost, and `predict --policy` implemented. Test campaigns and incomplete validation campaigns are rejected. This implements a required baseline, not the proposed adaptive research contribution.
-- Next: S10 live IBM/IQM adapter with durable job-ID recovery; the user selected IBM first and an NVIDIA GPU Slurm cluster. Cluster connection details and a hardware budget remain to be supplied. No live adapter, QPU submission, GPU benchmark, final campaign, adaptive policy, or completed manuscript is claimed. Complete M0's full-text novelty review and freeze hardware budgets before confirmatory collection.
+- S10: IBM SamplerV2 inference, shared ISA/partition compilation, frozen QPY templates, explicit job/shot/runtime limits, durable submission intents/job IDs, result caching, and ambiguous-submission refusal implemented. Offline tests use local sampler results and mocked services; no account was contacted and no QPU job was submitted. Saved-account and environment credential loading are supported. IQM live execution and remote campaign orchestration remain pending.
+- S10 verification: 42 tests passed with one GPU skip; IBM tests submit only to a local sampler behind mocked Runtime services. A wait timeout and temporarily unavailable backend recover the accepted job; cached reads submit no new jobs. Shared compiler regression checks cover IBM and all IQM profiles.
+- Next: S10b NVIDIA Slurm launcher and GPU preflight instructions, then actual GPU/IBM control runs when cluster connection details and a hardware budget/backend are available. No GPU benchmark, real-QPU result, final campaign, adaptive policy, or completed manuscript is claimed. Complete M0's full-text novelty review before confirmatory collection.
 
 ## 1. Research objective and scope
 

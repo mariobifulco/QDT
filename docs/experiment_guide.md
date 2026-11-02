@@ -139,3 +139,42 @@ uv run qdt predict --model results/cpu-pilot/models/seed-0.json --policy results
 Selection requires a complete validation campaign and rejects test campaigns. For each frozen model, it selects the lowest median measured total time among settings whose observed mean balanced accuracy is within `delta` of the reference. The policy records model IDs, execution overrides, source/selection provenance, measured selection-attempt time, and bookkeeping time. Missing attempt timing is null. This is the validation-selected fixed-setting baseline, not an adaptive scheduler or a non-inferiority guarantee.
 
 `predict --policy` verifies the policy checksum and model ID. It cannot be combined with `--execution`, and still defaults to validation. An eventual held-out evaluation requires explicit `--split test` after the study protocol and settings are frozen. Include selection cost and test uncertainty when reporting any benefit.
+
+## IBM hardware inference and durable job recovery
+
+IBM is the first live provider. IQM hardware submission remains a later extension; its local profiles continue to work. IBM execution uses SamplerV2, ISA compilation, and the same copy mapping and partition checks as local profile simulation. Twirling and dynamical decoupling are explicitly disabled in this first implementation.
+
+Install the IBM extra and configure a saved IBM account or the existing `.env` variables. Tokens are passed to the service, not written into model artifacts or journals. Choose an actually accessible device; no backend name is assumed to be available.
+
+Create an execution JSON file with your device name and fresh journal path:
+
+```json
+{
+  "backend": "ibm",
+  "ibm_backend": "YOUR_ACCESSIBLE_BACKEND",
+  "job_journal": "results/ibm-control/journal",
+  "shots": 128,
+  "packing_factor": 2,
+  "batch_size": 8,
+  "max_qpu_jobs": 4,
+  "max_qpu_shots": 4096,
+  "qpu_timeout_s": 300,
+  "qpu_max_execution_time_s": 300
+}
+```
+
+The numbers are illustrative control-run limits, not a final study budget or a monetary cost guarantee. Set instance/provider spending limits as appropriate. Clear any simulated noise and `fake_qpu` when transferring a model trained with them to hardware. An explicit `qpu_layout` is optional; otherwise a deterministic greedy layout is selected and frozen in the journal.
+
+```sh
+uv run --extra ibm qdt predict --model results/model.json --execution configs/execution/ibm-control.json --max-samples 4 --output results/ibm-control/predictions.json
+```
+
+Create that execution file first; the path above is an example. `--max-samples` limits the first rows of the selected split or external input matrix and records their indices. The default split remains validation. This is a control run, not a full generalization estimate. Training and the legacy train-and-compare command reject live IBM execution.
+
+Each independent model/repetition/temporal block needs a new journal. Retrying the same interrupted workload must reuse its journal. The journal freezes configuration, selected layout, calibration properties, and compiled QPY templates; it records submission intent before sending a request and persists the returned job ID before waiting for results. A timeout can resume by retrieving that job, even if the backend is temporarily unavailable for new work. Completed results are cached and checked for corruption.
+
+If submission acceptance is uncertain and no job ID was saved, execution stops rather than submitting again. Locate and verify the existing job through the provider before resolving that journal entry; do not delete the journal or rerun with a new one as an automatic retry. Failed or ambiguous intents conservatively consume the job/shot reservation.
+
+`max_qpu_shots` counts composite-circuit shots, including all parameter rows; `max_qpu_jobs` counts submission intents. Runtime execution-time limits are per job. Counters distinguish workload shots from newly submitted jobs/shots and recovered jobs. Raw counts, Runtime metadata, and provider job metrics are retained. Archive the journal with results. Local `campaign` orchestration deliberately rejects live IBM runs until per-run remote campaign coordination is implemented; use standalone frozen-model inference for the initial pilot.
+
+Offline regression tests use local BackendSamplerV2 results and mocked IBM services. They validate parameter ordering, recovery, cached results, limits, and ambiguous-submission handling, but do not establish real device compatibility or performance. Relevant IBM references: [Sampler inputs/outputs](https://quantum.cloud.ibm.com/docs/en/guides/sampler-input-output) and [job retrieval](https://docs.quantum.ibm.com/guides/save-jobs).

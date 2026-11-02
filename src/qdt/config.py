@@ -10,6 +10,12 @@ from .data import DATASET_KEYS
 class Config:
     circuit: Circuit
     backend: str = "aer"
+    ibm_backend: str | None = None
+    job_journal: str | None = None
+    max_qpu_jobs: int = 0
+    max_qpu_shots: int = 0
+    qpu_timeout_s: int = 300
+    qpu_max_execution_time_s: int = 300
     dataset: str = "iris"
     synthetic_samples: int = 600
     data_seed: int = 1729
@@ -49,6 +55,10 @@ class Config:
     def __post_init__(self):
         for name in (
             "seed",
+            "max_qpu_jobs",
+            "max_qpu_shots",
+            "qpu_timeout_s",
+            "qpu_max_execution_time_s",
             "synthetic_samples",
             "data_seed",
             "split_seed",
@@ -102,10 +112,28 @@ class Config:
             and not self.shots
         ):
             raise ValueError("Exact gate-noise simulation requires density_matrix")
-        if self.backend != "aer":
+        if self.backend not in {"aer", "ibm"}:
             raise ValueError(
-                "backend must be aer; use fake_qpu for local IBM/IQM profiles"
+                "backend must be aer or ibm; use fake_qpu for local profiles"
             )
+        if (
+            min(self.max_qpu_jobs, self.max_qpu_shots) < 0
+            or min(self.qpu_timeout_s, self.qpu_max_execution_time_s) < 1
+        ):
+            raise ValueError("QPU budgets must be nonnegative and timeouts positive")
+        if self.backend == "ibm":
+            if (
+                not isinstance(self.ibm_backend, str)
+                or not self.ibm_backend.strip()
+                or not isinstance(self.job_journal, str)
+                or not self.job_journal.strip()
+                or min(self.shots, self.max_qpu_jobs, self.max_qpu_shots) < 1
+                or self.fake_qpu is not None
+                or any(self.noise_rates)
+            ):
+                raise ValueError(
+                    "IBM inference needs a backend, journal, positive shots/job budgets, and no simulated noise"
+                )
         if self.fake_qpu is not None:
             if not isinstance(self.fake_qpu, str) or not self.fake_qpu.strip():
                 raise ValueError(
@@ -117,7 +145,7 @@ class Config:
                 )
         if self.qpu_layout is not None:
             if (
-                self.fake_qpu is None
+                (self.fake_qpu is None and self.backend != "ibm")
                 or not isinstance(self.qpu_layout, (list, tuple))
                 or len(self.qpu_layout) != self.packing_factor * self.circuit.num_qubits
                 or any(type(q) is not int or q < 0 for q in self.qpu_layout)
