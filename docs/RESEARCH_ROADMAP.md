@@ -15,12 +15,13 @@ All implementation notes and project documentation are maintained in English. Ea
 | S02 — Save preprocessing, validation splits, and complete models | Complete | `feat: persist preprocessing splits and frozen QDT models` |
 | S03 — Separate training/inference and capture optimizer traces | Complete | `feat: separate training and frozen inference with optimizer traces` |
 | S04 — Implement Aer spatial packing and CPU/GPU selection | Implemented; GPU validation pending | `feat: add disjoint circuit packing and explicit Aer devices` |
-| S05 — Instrument execution and support packed hardware profiles | Implemented; automatic partitions and hardware validation pending | `feat: record execution costs and simulate packed hardware profiles` |
+| S05 — Instrument execution and support packed hardware profiles | Complete offline; hardware validation pending | `feat: record execution costs and simulate packed hardware profiles` |
 | S06a — Implement resumable local campaigns | Complete | `feat: add immutable local campaigns and safe resumption` |
 | S06b — Add paired analysis | Complete | `feat: rebuild paired campaign analysis and optional figures` |
 | S06c — Define the reproducible local CPU pilot | Complete | `test: define a small reproducible CPU pilot` |
 | S06d — Execute and document the CPU pilot | Complete | `docs: record the verified exploratory CPU pilot` |
-| S07 — Add deterministic profile partition selection | Next | M3; CPU-testable before hardware access |
+| S07 — Add deterministic profile partition selection | Complete offline | `feat: select deterministic calibration-aware profile partitions` |
+| S08 — Preserve old model IDs and add scalable synthetic data | Next | M1/M6 |
 | S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
 
 Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only. No GPU benchmark or real QPU execution has been performed. Hardware campaigns and empirical claims must remain pending until measured. The pre-existing README and roadmap edits are included in S00.
@@ -38,7 +39,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S06b: analysis validates raw predictions, writes CSV/JSON/Markdown, and optionally generates PDF/PNG figures. Comparisons pair frozen models within datasets and collapse timing repetitions before model-level bootstrap; no CI is emitted for a single model. Analysis tests forbid circuit execution. Matplotlib is an optional analysis extra, not a simulation dependency.
 - S06c: committed pilot training/campaign manifests and exact reproduction commands. The run matrix has two frozen models, six execution conditions, and two repetitions (24 runs), using validation only.
 - S06d: 24/24 CPU validation runs completed from clean commit `9fbbbc8`; resumption skipped all completed runs. PDF/PNG generated and visually checked. Native request batching already captures most observed speedup in this tiny pilot; no general packing, GPU, or hardware claim is established. Summary and checksums: `docs/pilots/cpu_pilot_20261102.md` and `.json`. Raw data remains in ignored `results/cpu-pilot/`. Full regression: 35 tests, one GPU skip; lint/format/Slurm syntax pass.
-- Next: S07 deterministic calibration-aware profile partitions; then scalable synthetic data and hardware-provider integration. GPU and real-QPU runs require external resources and remain unperformed.
+- S07: optional deterministic greedy connected partitions use target readout/two-qubit errors and penalize missing calibration. Explicit layouts remain supported; compiled-circuit validation rejects infeasible routing and shared resonators. Tests verify deterministic calibration ranking and automatic/explicit profile equivalence. No optimal packing or crosstalk claim is made.
+- Next: S08 keep frozen-model IDs compatible with additive configuration defaults and add scalable synthetic data. GPU and real-QPU runs require external resources and remain unperformed.
 
 ## 1. Research objective and scope
 

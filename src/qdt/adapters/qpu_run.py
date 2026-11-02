@@ -7,6 +7,7 @@ from qiskit import ClassicalRegister, QuantumCircuit, transpile
 from qiskit.quantum_info import Pauli
 
 from ..packing import compose_copies
+from ..partitions import select_layout
 from ..qpu import load_profile, noise_from_dict
 from .qiskit_run import Adapter as AerAdapter
 from .qiskit_run import aer_backend
@@ -20,9 +21,10 @@ class Adapter(AerAdapter):
         self.device_name = f"local:{self.profile.metadata['source']}"
         self.backends = {}
         self.readout_matrices = {}
-        if config.packing_factor > 1 and config.qpu_layout is None:
-            raise ValueError(
-                "Packed profile simulation requires an explicit disjoint qpu_layout"
+        self.selected_layout = config.qpu_layout
+        if config.packing_factor > 1 and self.selected_layout is None:
+            self.selected_layout = select_layout(
+                self.profile.target, self.circuit.num_qubits, config.packing_factor
             )
         if config.aer_method == "statevector" and not config.shots:
             raise ValueError(
@@ -39,7 +41,11 @@ class Adapter(AerAdapter):
         qc, parameters, readouts = compose_copies(self.circuit, copies)
         qc.add_register(ClassicalRegister(copies))
         qc.measure(readouts, range(copies))
-        layout = list(config.qpu_layout[: qc.num_qubits]) if config.qpu_layout else None
+        layout = (
+            list(self.selected_layout[: qc.num_qubits])
+            if self.selected_layout
+            else None
+        )
         if layout and max(layout) >= profile.target.num_qubits:
             raise ValueError("qpu_layout exceeds the device qubit count")
         if qc.num_qubits > profile.target.num_qubits:
@@ -131,6 +137,9 @@ class Adapter(AerAdapter):
             native_gate_counts=dict(compiled.count_ops()),
             compiled_depth=compiled.depth(),
             requested_layout=layout,
+            partition_selection="explicit"
+            if config.qpu_layout
+            else ("greedy" if self.selected_layout else "transpiler"),
         )
         self.template_metadata[copies] = metadata
         if copies == config.packing_factor:

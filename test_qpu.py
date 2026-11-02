@@ -227,6 +227,8 @@ class QPUProfileTests(unittest.TestCase):
                 np.testing.assert_allclose(
                     exact, changed_seed.probabilities(ROWS, 1), atol=1e-12
                 )
+        with self.assertRaisesRegex(ValueError, "Routing leaves"):
+            get_adapter(Config(circuit=PAIR, fake_qpu="iqm:deneb", packing_factor=2))
         profile = load_profile("iqm:deneb")
         profile.noise = NoiseModel()
         profile.noise.add_all_qubit_quantum_error(depolarizing_error(1, 2), "move")
@@ -264,8 +266,16 @@ class QPUProfileTests(unittest.TestCase):
             sampled = get_adapter(replace(config, shots=8192))
             np.testing.assert_allclose(sampled.probabilities(rows, 2), p, atol=0.03)
             self.assertEqual(packed.profile_metadata["physical_readouts"], [1, 3])
-            with self.assertRaisesRegex(ValueError, "explicit disjoint"):
-                get_adapter(replace(config, qpu_layout=None))
+            automatic = get_adapter(replace(config, qpu_layout=None))
+            explicit = get_adapter(
+                replace(config, qpu_layout=automatic.selected_layout)
+            )
+            np.testing.assert_allclose(
+                automatic.probabilities(rows), explicit.probabilities(rows), atol=1e-12
+            )
+            self.assertEqual(
+                automatic.profile_metadata["partition_selection"], "greedy"
+            )
 
     def test_cli_local_profile_end_to_end(self):
         with tempfile.TemporaryDirectory() as folder:

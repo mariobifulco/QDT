@@ -3,12 +3,14 @@ from dataclasses import replace
 from unittest.mock import patch
 
 import numpy as np
+from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit_aer import AerSimulator
 
 from qdt.adapters.qiskit_run import Adapter
 from qdt.circuit import Circuit
 from qdt.config import Config
 from qdt.packing import compose_copies, marginal_zeros
+from qdt.partitions import select_layout
 
 CIRCUIT = Circuit(
     num_qubits=2,
@@ -65,6 +67,22 @@ class PackingTests(unittest.TestCase):
                 )
                 self.assertEqual(experiment["metadata"]["device"], "CPU")
         np.testing.assert_allclose(decoded, p)
+
+    def test_greedy_partitions_are_disjoint_deterministic_and_calibration_aware(self):
+        backend = GenericBackendV2(
+            4,
+            basis_gates=["cx", "ry"],
+            coupling_map=[[0, 1], [1, 0], [2, 3], [3, 2]],
+            seed=7,
+        )
+        for q in range(4):
+            backend.target["measure"][(q,)].error = 0.1 if q < 2 else 0.001
+        for edge, properties in backend.target["cx"].items():
+            properties.error = 0.1 if max(edge) < 2 else 0.001
+        self.assertEqual(select_layout(backend.target, 2, 2), (2, 3, 0, 1))
+        self.assertEqual(select_layout(backend.target, 2, 2), (2, 3, 0, 1))
+        with self.assertRaises(ValueError):
+            select_layout(backend.target, 2, 3)
 
     def test_gpu_request_never_falls_back_to_cpu(self):
         with patch.object(AerSimulator, "available_devices", return_value=("CPU",)):
