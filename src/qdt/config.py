@@ -22,7 +22,10 @@ class Config:
     transpiler_seed: int = 0
     test_size: float = 0.2
     max_train_samples: int | None = None
-    batch_size: int = 64
+    batch_size: int = 64  # Composite circuits per backend request.
+    packing_factor: int = 1
+    aer_device: str = "CPU"
+    aer_method: str = "automatic"
     shots: int = 0  # Exact probabilities; positive values enable shot sampling.
     depolarizing: float = 0.0
     amplitude_damping: float = 0.0
@@ -46,6 +49,7 @@ class Config:
             "simulator_seed",
             "transpiler_seed",
             "batch_size",
+            "packing_factor",
             "shots",
             "threads",
             "max_evals",
@@ -70,6 +74,18 @@ class Config:
             object.__setattr__(self, "circuit", Circuit(**self.circuit))
         if not isinstance(self.circuit, Circuit):
             raise ValueError("circuit must be a Circuit or its JSON definition")
+        if self.packing_factor < 1:
+            raise ValueError("packing_factor must be positive")
+        if self.aer_device not in {"CPU", "GPU"}:
+            raise ValueError("aer_device must be CPU or GPU")
+        if self.aer_method not in {"automatic", "statevector", "density_matrix"}:
+            raise ValueError("Unsupported Aer simulation method")
+        if (
+            self.aer_method == "statevector"
+            and any(self.noise_rates[:3])
+            and not self.shots
+        ):
+            raise ValueError("Exact gate-noise simulation requires density_matrix")
         if self.backend != "aer":
             raise ValueError(
                 "backend must be aer; use fake_qpu for local IBM/IQM profiles"

@@ -14,8 +14,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S01 — Freeze an initial protocol and remove CUDA-Q | Complete | `chore: remove CUDA-Q and record the exploratory protocol` |
 | S02 — Save preprocessing, validation splits, and complete models | Complete | `feat: persist preprocessing splits and frozen QDT models` |
 | S03 — Separate training/inference and capture optimizer traces | Complete | `feat: separate training and frozen inference with optimizer traces` |
-| S04 — Implement Aer spatial packing and CPU/GPU selection | Next | M2 |
-| S05 — Instrument execution and support packed hardware profiles | Pending | M3–M4 |
+| S04 — Implement Aer spatial packing and CPU/GPU selection | Implemented; GPU validation pending | `feat: add disjoint circuit packing and explicit Aer devices` |
+| S05 — Instrument execution and support packed hardware profiles | Next | M3–M4 |
 | S06 — Implement resumable local campaigns and analysis | Pending | M5 |
 | S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
 
@@ -27,7 +27,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S01: CUDA-Q adapter/config/dependencies/CI removed; 24 checks passed (one optional check skipped). Dependency resolution required registry metadata after the offline cache proved incomplete; existing retained versions were preserved. Initial protocol and related-work comparison are in `docs/research_protocol.md` and `docs/related_work.md`; references are in `paper/references.bib`. Final hardware budget and full-text novelty audit remain pending, so M0 is exploratory rather than fully frozen.
 - S02: complete JSON model artifacts include preprocessing, classes, split indices, dataset checksum, and integrity ID. Fresh-process inference roundtrip and training-only preprocessing verified. Examples now use 60/20/20 splits with fixed split seed; `validation_size=0` retains legacy API splits. 25 tests passed (one optional skip).
 - S03: `qdt train` and `qdt predict` implemented; prediction defaults to validation and reuses a frozen model. Separate split/optimizer/simulator/transpiler seeds and per-node optimizer traces are recorded. CLI roundtrip, non-overwrite, and budget checks added; 26 tests passed (one optional skip). See `docs/experiment_guide.md`.
-- Next: S04 Aer packing, explicit CPU/GPU selection, and numerical checks.
+- S04: cached disjoint-copy templates, explicit little-endian marginals, partial batches, independent request/packing settings, and Aer CPU/GPU/method selection implemented. Fusion enabled for fair native baselines. 29 tests passed with two skips; actual GPU smoke validation remains pending on compatible hardware. See the GPU environment instructions in the experiment guide.
+- Next: S05 reusable execution records/counters and packed local hardware profiles; do not claim hardware or GPU measurements.
 
 ## 1. Research objective and scope
 
@@ -232,15 +233,15 @@ A model trained once and reused across inference comparisons. This is the experi
 
 ### Required checks
 
-- [ ] Packed and separate marginal probabilities agree in ideal simulation within a stated numerical tolerance.
-- [ ] Cases include different parameters per copy, intra-copy entanglement, and nontrivial readout.
+- [x] Packed and separate marginal probabilities agree in ideal simulation within a stated numerical tolerance.
+- [x] Cases include different parameters per copy, intra-copy entanglement, and nontrivial readout.
 - [ ] Parameter/bit ordering changes after compilation are covered.
-- [ ] Results are correctly restored to input order after grouping.
-- [ ] Finite-shot estimates are compared statistically with exact references, without requiring identical counts across batching strategies.
-- [ ] No unintended connections exist between logical copies.
+- [x] Results are correctly restored to input order after grouping.
+- [x] Finite-shot estimates are compared statistically with exact references, without requiring identical counts across batching strategies.
+- [x] No unintended connections exist between logical copies.
 - [ ] A GPU smoke test verifies real GPU execution, not merely GPU visibility.
 - [ ] CPU and GPU results agree within tolerances appropriate to method, precision, and shots.
-- [ ] GPU tests are skipped explicitly when hardware is unavailable; CPU CI remains usable without CUDA-Q or GPU packages.
+- [x] GPU tests are skipped explicitly when hardware is unavailable; CPU CI remains usable without CUDA-Q or GPU packages.
 
 ### Completion criteria
 

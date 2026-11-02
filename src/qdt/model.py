@@ -12,6 +12,9 @@ from .data import Preprocessing
 from .quantum_tree import QNode, predict
 
 EXECUTION_FIELDS = {
+    "packing_factor",
+    "aer_device",
+    "aer_method",
     "simulator_seed",
     "transpiler_seed",
     "backend",

@@ -26,3 +26,27 @@ Model/circuit/training changes are rejected as inference overrides. Train a new 
 Training records each objective evaluation and restart termination, with node/candidate context and declared budgets. Timing includes setup and training; inference reports setup, prediction, and total time. Detailed backend instrumentation is a subsequent implementation step.
 
 The original `qdt --config ... --output ...` comparison command remains available for exploratory compatibility. It trains both QDT and CART and is distinct from the frozen-model workflow.
+
+## Spatial packing and Aer devices
+
+`packing_factor` is the number of disjoint copies in a composite circuit. `batch_size` retains its existing name and controls composite circuits per backend request. They are independent settings. Partial batches use a smaller template; unused copies are not executed. Finite shots are shared by all active copies in a composite circuit.
+
+Example inference overrides:
+
+```json
+{"packing_factor": 4, "batch_size": 16, "shots": 2048, "aer_device": "CPU", "aer_method": "automatic"}
+```
+
+Methods are `automatic`, `statevector`, and `density_matrix`. Automatic selection uses density matrices for gate noise and statevectors otherwise. Exact gate-noise references require density matrices. GPU requests must be supported by the installed build and are checked against actual result metadata.
+
+## GPU environment
+
+Use a compatible Linux/NVIDIA cluster. Keep its environment separate from local CPU development. The CPU lockfile does not provide GPU support. Follow the official Aer installation documentation linked in the roadmap and verify the distribution against cluster drivers and runtime.
+
+1. Create a separate environment, for example `.venv-gpu`.
+2. Install the project and its CPU-pinned dependencies, then replace the standard `qiskit-aer` distribution with a compatible, explicitly pinned `qiskit-aer-gpu` package (or a GPU-enabled source build).
+3. Check the effective environment rather than installing both overlapping Aer distributions. Save the resolved versions/build and GPU runtime details with the campaign.
+4. Run `.venv-gpu/bin/python -m unittest -v test_packing` and confirm the GPU test runs instead of being skipped.
+5. Use `aer_device: GPU` in execution overrides and preserve result metadata. Do not run `uv sync` against the CPU project environment as a way to prepare GPU support.
+
+GPU correctness and performance have not been measured on the current CPU-only Mac. Multi-GPU scaling remains a later pilot.

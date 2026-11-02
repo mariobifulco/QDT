@@ -15,3 +15,5 @@ datasets/
 logs/
 results/campaigns/
 results/verification/
+
+.venv-gpu/

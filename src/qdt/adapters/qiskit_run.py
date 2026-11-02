@@ -10,6 +10,7 @@ from qiskit_aer.noise import (
 )
 
 from ..circuit import SINGLE_GATES, TWO_GATES
+from ..packing import compose_copies, marginal_zeros, packed_batches
 from . import circuit_array
 
 
@@ -32,9 +33,15 @@ class Adapter:
         self.circuit = config.circuit
         self.rng = np.random.default_rng(config.seed_for("simulator"))
         self.calls = self.circuits = 0
-        self.device_name = (
-            "density_matrix" if any(config.noise_rates[:3]) else "statevector"
-        )
+        self.device_name = config.aer_method
+        if self.device_name == "automatic":
+            self.device_name = (
+                "density_matrix" if any(config.noise_rates[:3]) else "statevector"
+            )
+        if config.aer_device not in AerSimulator().available_devices():
+            raise ValueError(
+                f"Aer device {config.aer_device} is unavailable; install a compatible Aer build"
+            )
         noise = NoiseModel(basis_gates=sorted(SINGLE_GATES | TWO_GATES))
         error = gate_error(config)
         if error is not None:
@@ -45,53 +52,70 @@ class Adapter:
             noise.add_all_qubit_readout_error(ReadoutError([[1 - p, p], [p, 1 - p]]))
         self.backend = AerSimulator(
             method=self.device_name,
+            device=config.aer_device,
             noise_model=noise,
             max_parallel_threads=config.threads,
-            fusion_enable=False,
+            fusion_enable=True,
             runtime_parameter_bind_enable=True,
         )
-        self.template = self.circuit.template.copy()
-        if config.shots:
-            from qiskit import ClassicalRegister
+        self.last_metadata = []
+        self.templates = {}
+        self.template = self._template(config.packing_factor)[0]
 
-            self.template.add_register(ClassicalRegister(1))
-            self.template.measure(self.circuit.readout_qubit, 0)
-        else:
-            self.template.save_expectation_value(
-                Pauli("Z"), [self.circuit.readout_qubit], label="z"
-            )
+    def _template(self, copies):
+        if copies not in self.templates:
+            qc, parameters, readouts = compose_copies(self.circuit, copies)
+            if self.config.shots:
+                from qiskit import ClassicalRegister
+
+                qc.add_register(ClassicalRegister(copies))
+                qc.measure(readouts, range(copies))
+            else:
+                for i, readout in enumerate(readouts):
+                    qc.save_expectation_value(Pauli("Z"), [readout], label=f"z{i}")
+            self.templates[copies] = qc, parameters
+        return self.templates[copies]
 
     def probabilities(self, circuits, batch_size=1):
         angles = circuit_array(circuits, batch_size, self.circuit.num_inputs)
         if not len(angles):
             return np.empty(0)
         self.calls += 1
-        self.circuits += len(circuits)
-        probabilities = []
-        for start in range(0, len(circuits), batch_size):
-            batch = angles[start : start + batch_size]
-            bindings = {
-                parameter: batch[:, column].tolist()
-                for column, parameter in enumerate(self.circuit.parameters)
-            }
+        self.circuits += len(angles)
+        probabilities = np.empty(len(angles))
+        for start, batch in packed_batches(
+            angles, self.config.packing_factor, batch_size
+        ):
+            groups, copies, width = batch.shape
+            template, parameters = self._template(copies)
+            values = batch.reshape(groups, copies * width)
+            bindings = {p: values[:, i].tolist() for i, p in enumerate(parameters)}
             result = self.backend.run(
-                self.template,
+                template,
                 parameter_binds=[bindings],
                 shots=self.config.shots or 1,
                 seed_simulator=int(self.rng.integers(0, 2**31 - 1)),
             ).result()
+            self.last_metadata = [record.metadata for record in result.results]
+            if any(
+                record.get("device") != self.config.aer_device
+                for record in self.last_metadata
+            ):
+                raise RuntimeError("Aer executed on a different device than requested")
             if not result.success:
                 raise RuntimeError(f"Aer simulation failed: {result.status}")
-            for index in range(len(batch)):
+            for index in range(groups):
                 if self.config.shots:
-                    counts = result.get_counts(index)
-                    total = sum(counts.values())
-                    if not total:
-                        raise RuntimeError("Aer returned no measurement counts")
-                    p = counts.get("0", 0) / total
+                    p = marginal_zeros(result.get_counts(index), copies)
                 else:
-                    p = (1 + float(result.data(index)["z"])) / 2
+                    p = np.array(
+                        [
+                            (1 + float(result.data(index)[f"z{i}"])) / 2
+                            for i in range(copies)
+                        ]
+                    )
                     r = self.config.readout_error
                     p = p * (1 - r) + (1 - p) * r
-                probabilities.append(p)
+                offset = start + index * copies
+                probabilities[offset : offset + copies] = p
         return np.clip(probabilities, 0, 1)
