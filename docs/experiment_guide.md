@@ -217,3 +217,9 @@ QDT_PYTHON="$PWD/.venv-gpu/bin/python" sbatch --partition GPU_PARTITION --accoun
 Create that manifest first. It is not a supplied site configuration. Set `threads` explicitly in its overrides to fit the CPU allocation. A plan resolved on the Mac cannot be used for new cluster runs because source/environment checks and absolute model paths differ. Do not change source or package resolution between planning and execution. Resume by submitting the same run command after a normal interruption; inspect stale claims and budgets as documented earlier.
 
 These commands currently use one coordinator and one allocated GPU. Independent multi-GPU scaling, GPU peak-memory telemetry, and actual site validation remain pending. Run CPU-only IBM inference clients without reserving a GPU unnecessarily. The user currently requests preparation only for these paths: execute experiments locally on CPU and do not submit Slurm or QPU jobs.
+
+## Small CPU profile studies
+
+Campaign manifests may specify `max_samples` to limit the first validation/test rows for a control study. The exact selected indices and limit are frozen in each run specification, used in budget estimates, and verified against completed results. Small prefixes are exploratory control inputs, not a full-dataset generalization estimate.
+
+New plans include an execution-environment fingerprint in each run ID. This distinguishes identical settings collected with different source/dependency environments. Old completed plans remain readable for analysis; unfinished work must still match its original source and environment.

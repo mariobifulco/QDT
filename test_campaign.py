@@ -137,6 +137,31 @@ class CampaignTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "validation data"):
                 select(root / "test-plan.json", reference="isolated")
 
+    def test_sample_limits_and_environment_are_frozen_in_run_identity(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root, manifest_path, manifest = self.prepare(folder)
+            manifest["max_samples"] = 5
+            manifest_path.write_text(json.dumps(manifest))
+            original = plan(manifest_path)
+            self.assertTrue(
+                all(len(run["sample_indices"]) == 5 for run in original["runs"])
+            )
+            write_json(root / "plan.json", original)
+            execute(root / "plan.json")
+            for run in original["runs"]:
+                self.assertEqual(len(completed_result(root, run)["predictions"]), 5)
+            from qdt.experiment import provenance
+
+            current = provenance()
+            with patch(
+                "qdt.campaign.provenance",
+                return_value={**current, "source_sha256": "other-source"},
+            ):
+                changed = plan(manifest_path)
+            self.assertNotEqual(
+                original["runs"][0]["run_id"], changed["runs"][0]["run_id"]
+            )
+
     def test_limits_and_atomic_json(self):
         with tempfile.TemporaryDirectory() as folder:
             root, manifest_path, manifest = self.prepare(folder)

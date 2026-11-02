@@ -22,6 +22,21 @@ def identity(value):
     ).hexdigest()
 
 
+def environment_id(value):
+    return identity(
+        {
+            key: value.get(key)
+            for key in (
+                "source_sha256",
+                "versions",
+                "python",
+                "platform",
+                "lockfile_sha256",
+            )
+        }
+    )
+
+
 def file_checksum(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -44,6 +59,7 @@ def plan(manifest_path):
         "repetitions",
         "split",
         "limits",
+        "max_samples",
     }:
         raise ValueError("Unknown campaign fields")
     repetitions = positive_integer(manifest.get("repetitions", 1), "repetitions")
@@ -58,6 +74,10 @@ def plan(manifest_path):
             ("max_seconds", 3600),
         ]
     }
+    maximum = manifest.get("max_samples")
+    if maximum is not None:
+        positive_integer(maximum, "max_samples")
+    environment = provenance()
     split = manifest.get("split", "validation")
     if split not in {"validation", "test"}:
         raise ValueError("Campaign split must be validation or test")
@@ -96,7 +116,7 @@ def plan(manifest_path):
         X, y = load_dataset(model.config)
         if dataset_checksum(X, y) != model.data["dataset_sha256"]:
             raise ValueError("Dataset differs from the frozen model")
-        indices = model.data["split_indices"][split]
+        indices = model.data["split_indices"][split][:maximum]
         if not indices:
             raise ValueError(f"Model has no {split} samples")
         logical_bound = len(indices) * depth(model.tree)
@@ -119,6 +139,9 @@ def plan(manifest_path):
                 resolved = model.execution_config(overrides)
                 spec = {
                     "model_id": model_id,
+                    "environment_id": environment_id(environment),
+                    "max_samples": maximum,
+                    "sample_indices": indices,
                     "model_sha256": file_checksum(path),
                     "name": execution["name"],
                     "execution": overrides,
@@ -143,7 +166,7 @@ def plan(manifest_path):
         "limits": limits,
         "runs": runs,
         "logical_shots_upper_bound": shots,
-        "provenance": provenance(),
+        "provenance": environment,
     }
 
 
@@ -161,6 +184,10 @@ def load_plan(path):
     if value["campaign_id"] != expected:
         raise ValueError("Campaign plan checksum mismatch")
     for run in value["runs"]:
+        if "environment_id" in run and run["environment_id"] != environment_id(
+            value["provenance"]
+        ):
+            raise ValueError("Plan environment checksum mismatch")
         spec = {
             key: item
             for key, item in run.items()
@@ -190,6 +217,13 @@ def completed_result(root, run):
         or result["split"] != run["split"]
     ):
         raise ValueError("Completed result configuration mismatch")
+    if (
+        "environment_id" in run
+        and environment_id(result["provenance"]) != run["environment_id"]
+    ):
+        raise ValueError("Completed result environment mismatch")
+    if "sample_indices" in run and result["sample_indices"] != run["sample_indices"]:
+        raise ValueError("Completed result sample indices mismatch")
     return result
 
 
@@ -272,6 +306,7 @@ def execute(plan_path, *, recover_stale=False):
                     execution=run["execution"],
                     split=run["split"],
                     records_output=attempt / "backend.json",
+                    max_samples=run.get("max_samples"),
                 )
                 result.update(
                     campaign_id=campaign["campaign_id"],
