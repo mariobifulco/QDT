@@ -226,3 +226,5 @@ New plans include an execution-environment fingerprint in each run ID. This dist
 
 
 Current IBM calibration snapshots may also advertise `xslow`, `measure_2`, `reset_2`, `measure_reset`, and `measure_reset_2`. The local reader explicitly excludes these specialized instructions from its static simulation target and records `excluded_native_instructions` in profile metadata. Standard gates retain their original calibration/noise information; the raw snapshot is unchanged. Unknown unsupported instructions still raise an error. These simulations do not evaluate the excluded operations or hardware crosstalk.
+
+File-based profile paths are resolved from the planning working directory and frozen with their byte checksums. Execute planning from the repository root for the supplied examples. Changing a snapshot requires a new plan; completed results remain analyzable from their stored records.

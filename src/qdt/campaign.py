@@ -123,8 +123,13 @@ def plan(manifest_path):
         for execution in executions:
             if set(execution) - {"name", "overrides"}:
                 raise ValueError("Unknown execution fields")
-            overrides = execution.get("overrides", {})
-            base = model.execution_config(overrides)
+            initial_overrides = dict(execution.get("overrides", {}))
+            selector = initial_overrides.get("fake_qpu", model.config.fake_qpu)
+            profile_file = None
+            if isinstance(selector, str) and selector.startswith("file:"):
+                profile_file = str(Path(selector.removeprefix("file:")).resolve())
+                initial_overrides["fake_qpu"] = f"file:{profile_file}"
+            base = model.execution_config(initial_overrides)
             if base.backend != "aer":
                 raise ValueError(
                     "Campaigns currently run local simulations; use predict with a unique IBM journal"
@@ -133,7 +138,7 @@ def plan(manifest_path):
             get_adapter(base)
             for repetition in range(repetitions):
                 overrides = {
-                    **execution.get("overrides", {}),
+                    **initial_overrides,
                     "simulator_seed": base.seed_for("simulator") + repetition,
                 }
                 resolved = model.execution_config(overrides)
@@ -143,6 +148,10 @@ def plan(manifest_path):
                     "max_samples": maximum,
                     "sample_indices": indices,
                     "model_sha256": file_checksum(path),
+                    "profile_file": profile_file,
+                    "profile_sha256": file_checksum(profile_file)
+                    if profile_file
+                    else None,
                     "name": execution["name"],
                     "execution": overrides,
                     "resolved_config": asdict(resolved),
@@ -254,6 +263,11 @@ def execute(plan_path, *, recover_stale=False):
     for run in campaign["runs"]:
         if file_checksum(run["model_path"]) != run["model_sha256"]:
             raise ValueError("Frozen model file changed since planning")
+        if (
+            run.get("profile_file")
+            and file_checksum(run["profile_file"]) != run["profile_sha256"]
+        ):
+            raise ValueError("Frozen profile file changed since planning")
         if completed_result(plan_path.parent, run) is not None:
             summary["skipped"] += 1
             continue

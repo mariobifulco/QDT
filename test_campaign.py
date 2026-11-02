@@ -162,6 +162,24 @@ class CampaignTests(unittest.TestCase):
                 original["runs"][0]["run_id"], changed["runs"][0]["run_id"]
             )
 
+    def test_profile_bytes_are_frozen_before_execution(self):
+        from qdt.qpu import write_profile
+        from test_qpu import ibm_test_profile
+
+        with tempfile.TemporaryDirectory() as folder:
+            root, manifest_path, manifest = self.prepare(folder)
+            profile_path = root / "profile.json"
+            write_profile(ibm_test_profile(), profile_path)
+            manifest["executions"] = [
+                {"name": "profile", "overrides": {"fake_qpu": f"file:{profile_path}"}}
+            ]
+            manifest_path.write_text(json.dumps(manifest))
+            write_json(root / "plan.json", plan(manifest_path))
+            profile_path.write_text(profile_path.read_text() + "\n")
+            with self.assertRaisesRegex(ValueError, "Frozen profile"):
+                execute(root / "plan.json")
+            self.assertFalse(list(root.glob("runs/*/attempt-*")))
+
     def test_limits_and_atomic_json(self):
         with tempfile.TemporaryDirectory() as folder:
             root, manifest_path, manifest = self.prepare(folder)
