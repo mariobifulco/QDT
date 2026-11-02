@@ -32,7 +32,7 @@ def run_probabilities(values, theta, adapter, config):
     return adapter.probabilities(inputs, config.batch_size)
 
 
-def fit(X, y, config, *, adapter=None):
+def fit(X, y, config, *, adapter=None, trace=None):
     X, y = np.asarray(X, dtype=float), np.asarray(y)
     if (
         X.ndim != 2
@@ -51,9 +51,9 @@ def fit(X, y, config, *, adapter=None):
             "Selected features are fewer than circuit inputs; increase top_k or corr_threshold"
         )
     groups = [tuple(range(i, i + width)) for i in range(X.shape[1] - width + 1)]
-    rng = np.random.default_rng(config.seed)
+    rng = np.random.default_rng(config.seed_for("optimizer"))
 
-    def grow(features, labels, depth):
+    def grow(features, labels, depth, path="root"):
         nonlocal adapter
         classes, counts = np.unique(labels, return_counts=True)
         leaf = QNode(value=int(classes[counts.argmax()]))
@@ -75,7 +75,14 @@ def fit(X, y, config, *, adapter=None):
             def probabilities(theta, group=group):
                 return run_probabilities(features[:, group], theta, adapter, config)
 
-            split = optimize_split(probabilities, labels, config, rng)
+            split = optimize_split(
+                probabilities,
+                labels,
+                config,
+                rng,
+                trace=trace,
+                context={"node": path, "features": list(group)},
+            )
             if split is not None:
                 theta, mask = split
                 score = split_score(mask, labels)
@@ -87,8 +94,8 @@ def fit(X, y, config, *, adapter=None):
         return QNode(
             feature_indices=group,
             theta=tuple(float(t) for t in theta),
-            left=grow(features[mask], labels[mask], depth + 1),
-            right=grow(features[~mask], labels[~mask], depth + 1),
+            left=grow(features[mask], labels[mask], depth + 1, path + ".left"),
+            right=grow(features[~mask], labels[~mask], depth + 1, path + ".right"),
         )
 
     return grow(X, y, 0)

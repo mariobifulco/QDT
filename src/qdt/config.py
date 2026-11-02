@@ -17,6 +17,9 @@ class Config:
         0.0  # Fraction of the full dataset; zero keeps legacy splits.
     )
     split_seed: int | None = None
+    optimizer_seed: int | None = None
+    simulator_seed: int | None = None
+    transpiler_seed: int = 0
     test_size: float = 0.2
     max_train_samples: int | None = None
     batch_size: int = 64
@@ -39,6 +42,9 @@ class Config:
         for name in (
             "seed",
             "split_seed",
+            "optimizer_seed",
+            "simulator_seed",
+            "transpiler_seed",
             "batch_size",
             "shots",
             "threads",
@@ -50,7 +56,13 @@ class Config:
             "top_k",
         ):
             value = getattr(self, name)
-            if value is None and name in {"max_train_samples", "top_k", "split_seed"}:
+            if value is None and name in {
+                "max_train_samples",
+                "top_k",
+                "split_seed",
+                "optimizer_seed",
+                "simulator_seed",
+            }:
                 continue
             if type(value) is not int:
                 raise ValueError(f"{name} must be an integer")
@@ -85,6 +97,15 @@ class Config:
             object.__setattr__(self, "qpu_layout", tuple(self.qpu_layout))
         if self.dataset not in DATASET_KEYS:
             raise ValueError(f"Unknown dataset: {self.dataset}")
+        for name in (
+            "split_seed",
+            "optimizer_seed",
+            "simulator_seed",
+            "transpiler_seed",
+        ):
+            value = getattr(self, name)
+            if value is not None and value < 0:
+                raise ValueError(f"{name} must be nonnegative")
         minimum = self.circuit.num_parameters + 2
         if self.restarts < 1 or self.max_evals < minimum * self.restarts:
             raise ValueError(
@@ -110,6 +131,10 @@ class Config:
             raise ValueError("max_train_samples must be >= 2")
         if any(not 0 <= rate <= 1 for rate in self.noise_rates):
             raise ValueError("Noise probabilities must be in [0, 1]")
+
+    def seed_for(self, stage):
+        value = getattr(self, f"{stage}_seed")
+        return self.seed if value is None else value
 
     @property
     def noise_rates(self):

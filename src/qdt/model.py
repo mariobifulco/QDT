@@ -12,6 +12,8 @@ from .data import Preprocessing
 from .quantum_tree import QNode, predict
 
 EXECUTION_FIELDS = {
+    "simulator_seed",
+    "transpiler_seed",
     "backend",
     "batch_size",
     "shots",

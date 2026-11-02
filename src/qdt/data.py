@@ -163,7 +163,7 @@ def load_dataset(config):
 def prepare_dataset(config):
     X, y = load_dataset(config)
     indices = np.arange(len(y))
-    seed = config.seed if config.split_seed is None else config.split_seed
+    seed = config.seed_for("split")
     train, test = train_test_split(
         indices, test_size=config.test_size, stratify=y, random_state=seed
     )
@@ -194,9 +194,7 @@ def prepare_dataset(config):
     preprocessing = Preprocessing(
         X.shape[1], features.tolist(), scales[selected].tolist()
     )
-    digest = hashlib.sha256(
-        X.astype("<f8").tobytes() + y.astype("<i8").tobytes()
-    ).hexdigest()
+    digest = dataset_checksum(X, y)
     return PreparedDataset(
         preprocessing.transform(X[train]),
         preprocessing.transform(X[test]),
@@ -214,3 +212,9 @@ def prepare_dataset(config):
         },
         digest,
     )
+
+
+def dataset_checksum(X, y):
+    return hashlib.sha256(
+        X.astype("<f8").tobytes() + y.astype("<i8").tobytes()
+    ).hexdigest()

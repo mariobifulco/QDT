@@ -11,7 +11,7 @@ class Adapter:
 
         self.config = config
         self.circuit = config.circuit
-        self.rng = np.random.default_rng(config.seed)
+        self.rng = np.random.default_rng(config.seed_for("simulator"))
         self.calls = self.circuits = 0
         profile = load_profile(config.fake_qpu)
         noise_data = profile.noise.to_dict()
@@ -27,7 +27,7 @@ class Adapter:
             raise ValueError("Circuit exceeds the device qubit count")
         options = {
             "initial_layout": list(config.qpu_layout) if config.qpu_layout else None,
-            "seed_transpiler": 0,
+            "seed_transpiler": config.transpiler_seed,
             "optimization_level": 0,
         }
         if profile.iqm_backend is not None:

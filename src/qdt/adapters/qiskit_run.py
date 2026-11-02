@@ -30,7 +30,7 @@ class Adapter:
     def __init__(self, config):
         self.config = config
         self.circuit = config.circuit
-        self.rng = np.random.default_rng(config.seed)
+        self.rng = np.random.default_rng(config.seed_for("simulator"))
         self.calls = self.circuits = 0
         self.device_name = (
             "density_matrix" if any(config.noise_rates[:3]) else "statevector"

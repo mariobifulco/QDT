@@ -3,7 +3,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -17,6 +17,85 @@ from test_qdt import TEST_CIRCUIT
 
 
 class ModelTests(unittest.TestCase):
+    def test_train_predict_cli_and_trace_budgets(self):
+        config = Config(
+            circuit=TEST_CIRCUIT,
+            validation_size=0.2,
+            max_train_samples=40,
+            max_depth=1,
+            max_evals=8,
+            restarts=1,
+            top_k=1,
+            split_seed=7,
+            optimizer_seed=11,
+            simulator_seed=13,
+            transpiler_seed=17,
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            config_path, model_path, output = (
+                root / "config.json",
+                root / "model.json",
+                root / "out.json",
+            )
+            config_path.write_text(json.dumps(asdict(config)))
+            command = [sys.executable, "-m", "qdt"]
+            subprocess.run(
+                [
+                    *command,
+                    "train",
+                    "--config",
+                    str(config_path),
+                    "--output",
+                    str(model_path),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            original = model_path.read_bytes()
+            model = Model.load(model_path)
+            trace = model.data["training"]["trace"]
+            self.assertTrue(any(event["event"] == "evaluation" for event in trace))
+            for event in trace:
+                if event["event"] == "restart_end":
+                    self.assertLessEqual(event["evaluations"], event["budget"])
+                    self.assertIn("message", event)
+            self.assertEqual(
+                model.data["training"]["seeds"],
+                {"split": 7, "optimizer": 11, "simulator": 13, "transpiler": 17},
+            )
+            subprocess.run(
+                [
+                    *command,
+                    "predict",
+                    "--model",
+                    str(model_path),
+                    "--output",
+                    str(output),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            result = json.loads(output.read_text())
+            self.assertEqual(result["split"], "validation")
+            self.assertEqual(result["model_id"], model.model_id)
+            self.assertEqual(len(result["predictions"]), 30)
+            self.assertEqual(model_path.read_bytes(), original)
+            self.assertNotEqual(
+                subprocess.run(
+                    [
+                        *command,
+                        "predict",
+                        "--model",
+                        str(model_path),
+                        "--output",
+                        str(output),
+                    ],
+                    capture_output=True,
+                ).returncode,
+                0,
+            )
+
     def test_frozen_model_roundtrip_and_training_only_preprocessing(self):
         config = Config(
             circuit=TEST_CIRCUIT, validation_size=0.2, max_evals=8, restarts=1

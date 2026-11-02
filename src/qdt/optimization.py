@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from scipy.optimize import minimize
 
@@ -43,7 +45,7 @@ def _soft_gini(probabilities, classes):
     return float(score)
 
 
-def optimize_split(probabilities, labels, config, rng):
+def optimize_split(probabilities, labels, config, rng, *, trace=None, context=None):
     _, classes, totals = np.unique(labels, return_inverse=True, return_counts=True)
     best_score, best = _gini_counts(totals), None
     for restart in range(config.restarts):
@@ -51,8 +53,11 @@ def optimize_split(probabilities, labels, config, rng):
             restart < config.max_evals % config.restarts
         )
 
-        def objective(theta):
-            nonlocal best_score, best
+        start = time.perf_counter()
+        evaluations = 0
+
+        def objective(theta, restart=restart, start=start):
+            nonlocal best_score, best, evaluations
             theta = np.asarray(theta) % (2 * np.pi)
             p = probabilities(theta)
             mask = p >= 0.5
@@ -62,12 +67,41 @@ def optimize_split(probabilities, labels, config, rng):
                 and score < best_score - 1e-12
             ):
                 best_score, best = score, (theta.copy(), mask.copy())
-            return _soft_gini(p, classes)
+            value = _soft_gini(p, classes)
+            evaluations += 1
+            if trace is not None:
+                trace.append(
+                    {
+                        **(context or {}),
+                        "event": "evaluation",
+                        "restart": restart,
+                        "evaluation": evaluations,
+                        "theta": theta.tolist(),
+                        "objective": value,
+                        "best_hard_score": best_score,
+                        "elapsed_s": time.perf_counter() - start,
+                    }
+                )
+            return value
 
-        minimize(
+        result = minimize(
             objective,
             rng.uniform(0, 2 * np.pi, config.circuit.num_parameters),
             method="COBYLA",
             options={"maxiter": budget},
         )
+        if trace is not None:
+            trace.append(
+                {
+                    **(context or {}),
+                    "event": "restart_end",
+                    "restart": restart,
+                    "evaluations": evaluations,
+                    "budget": budget,
+                    "status": int(result.status),
+                    "success": bool(result.success),
+                    "message": str(result.message),
+                    "elapsed_s": time.perf_counter() - start,
+                }
+            )
     return best

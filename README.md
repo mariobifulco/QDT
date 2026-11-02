@@ -16,6 +16,9 @@ uv sync --locked
 uv run qdt --config configs/aer_noiseless.json --output results/experiment.json
 ```
 
+For separate training and frozen-model inference, see the
+[experiment guide](docs/experiment_guide.md).
+
 This trains both models on the breast cancer dataset, prints their accuracy and
 saves metrics, predictions, timings, the quantum tree and its configuration.
 Use a new output filename for each run; existing files are never overwritten.

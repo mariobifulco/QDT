@@ -13,8 +13,8 @@ All implementation notes and project documentation are maintained in English. Ea
 | S00 — Record the approved roadmap | Complete | `docs: checkpoint the approved research roadmap` |
 | S01 — Freeze an initial protocol and remove CUDA-Q | Complete | `chore: remove CUDA-Q and record the exploratory protocol` |
 | S02 — Save preprocessing, validation splits, and complete models | Complete | `feat: persist preprocessing splits and frozen QDT models` |
-| S03 — Separate training/inference and capture optimizer traces | Next | M1 |
-| S04 — Implement Aer spatial packing and CPU/GPU selection | Pending | M2 |
+| S03 — Separate training/inference and capture optimizer traces | Complete | `feat: separate training and frozen inference with optimizer traces` |
+| S04 — Implement Aer spatial packing and CPU/GPU selection | Next | M2 |
 | S05 — Instrument execution and support packed hardware profiles | Pending | M3–M4 |
 | S06 — Implement resumable local campaigns and analysis | Pending | M5 |
 | S07 onward — Pilot, hardware integration, selection, and paper | Pending | M6–M11; hardware-dependent checks require actual resources |
@@ -26,7 +26,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 - S00: `d773f3a` records the approved roadmap.
 - S01: CUDA-Q adapter/config/dependencies/CI removed; 24 checks passed (one optional check skipped). Dependency resolution required registry metadata after the offline cache proved incomplete; existing retained versions were preserved. Initial protocol and related-work comparison are in `docs/research_protocol.md` and `docs/related_work.md`; references are in `paper/references.bib`. Final hardware budget and full-text novelty audit remain pending, so M0 is exploratory rather than fully frozen.
 - S02: complete JSON model artifacts include preprocessing, classes, split indices, dataset checksum, and integrity ID. Fresh-process inference roundtrip and training-only preprocessing verified. Examples now use 60/20/20 splits with fixed split seed; `validation_size=0` retains legacy API splits. 25 tests passed (one optional skip).
-- Next: S03 CLI training/inference separation, execution seeds, and optimizer traces.
+- S03: `qdt train` and `qdt predict` implemented; prediction defaults to validation and reuses a frozen model. Separate split/optimizer/simulator/transpiler seeds and per-node optimizer traces are recorded. CLI roundtrip, non-overwrite, and budget checks added; 26 tests passed (one optional skip). See `docs/experiment_guide.md`.
+- Next: S04 Aer packing, explicit CPU/GPU selection, and numerical checks.
 
 ## 1. Research objective and scope
 
@@ -204,10 +205,10 @@ Do not introduce a new multi-framework abstraction to replace CUDA-Q. Aer CPU an
 
 ### Checks
 
-- [ ] Training, saving, process termination, and reloading preserve exact-simulation predictions.
-- [ ] New data passes through the saved preprocessing without label access.
-- [ ] Changing inference configuration does not modify the model artifact.
-- [ ] COBYLA budgets are explicitly defined per candidate and node, accounting for restarts.
+- [x] Training, saving, process termination, and reloading preserve exact-simulation predictions.
+- [x] New data passes through the saved preprocessing without label access.
+- [x] Changing inference configuration does not modify the model artifact.
+- [x] COBYLA budgets are explicitly defined per candidate and node, accounting for restarts.
 
 ### Expected artifact
 

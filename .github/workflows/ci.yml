@@ -19,7 +19,7 @@ jobs:
       - name: Check formatting
         run: uv run ruff format --check .
       - name: Core regression checks
-        run: uv run python -m unittest -v test_qdt
+        run: uv run python -m unittest -v test_qdt test_model
       - name: Adapter checks
         run: uv run python -m unittest -v test_adapters
       - name: Local QPU profiles and calibration download checks

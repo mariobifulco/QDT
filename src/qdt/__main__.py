@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import sys
 import time
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -16,6 +17,11 @@ from .quantum_tree import fit, predict
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] in {"train", "predict"}:
+        from .experiment import main as experiment_main
+
+        return experiment_main(argv)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path)
     parser.add_argument("--dataset", choices=DATASET_KEYS)
