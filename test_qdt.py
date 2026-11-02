@@ -418,9 +418,21 @@ class QDTTests(unittest.TestCase):
             (np.ones((4, 2)), np.array([0, 1, 0, 1])),
             (np.full((4, 2), 1e6), np.array([1, 1, 0, 0])),
         ):
-            with patch(
-                "qdt.data.train_test_split",
-                return_value=(train, test, labels, test_labels),
+            with (
+                patch(
+                    "qdt.data.load_dataset",
+                    return_value=(
+                        np.vstack([train, test]),
+                        np.concatenate([labels, test_labels]),
+                    ),
+                ),
+                patch(
+                    "qdt.data.train_test_split",
+                    return_value=(
+                        np.arange(len(train)),
+                        np.arange(len(train), len(train) + len(test)),
+                    ),
+                ),
             ):
                 prepared = prepare_dataset(replace(config, top_k=1))
                 np.testing.assert_array_equal(prepared.feature_indices, [0])

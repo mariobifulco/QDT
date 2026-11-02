@@ -1,3 +1,4 @@
+import hashlib
 import warnings
 from dataclasses import dataclass
 from io import BytesIO
@@ -36,6 +37,37 @@ DATASET_KEYS = (*LOADERS, *UCI, "synthetic", "synthetic_xor")
 
 
 @dataclass
+class Preprocessing:
+    original_dim: int
+    feature_indices: list[int]
+    scales: list[float]
+
+    def __post_init__(self):
+        if (
+            type(self.original_dim) is not int
+            or self.original_dim < 1
+            or not self.feature_indices
+            or any(
+                type(i) is not int or not 0 <= i < self.original_dim
+                for i in self.feature_indices
+            )
+            or len(set(self.feature_indices)) != len(self.feature_indices)
+            or len(self.scales) != len(self.feature_indices)
+            or not np.isfinite(self.scales).all()
+            or np.any(np.asarray(self.scales) <= 0)
+        ):
+            raise ValueError("Invalid preprocessing dimensions, features or scales")
+
+    def transform(self, X):
+        X = np.asarray(X, dtype=float)
+        if X.ndim != 2 or X.shape[1] != self.original_dim or not np.isfinite(X).all():
+            raise ValueError(
+                "Expected finite raw features with the original column count"
+            )
+        return X[:, self.feature_indices] / self.scales
+
+
+@dataclass
 class PreparedDataset:
     X_train: np.ndarray
     X_test: np.ndarray
@@ -43,6 +75,11 @@ class PreparedDataset:
     y_test: np.ndarray
     feature_indices: np.ndarray
     original_dim: int
+    X_validation: np.ndarray
+    y_validation: np.ndarray
+    preprocessing: Preprocessing
+    split_indices: dict
+    dataset_sha256: str
 
 
 def load_uci(key, data_dir, *, download=False):
@@ -97,7 +134,7 @@ def select_features(X, y, config):
     return selected
 
 
-def prepare_dataset(config):
+def load_dataset(config):
     if config.dataset in LOADERS:
         bunch = LOADERS[config.dataset]()
         X, y = bunch.data, bunch.target
@@ -120,30 +157,60 @@ def prepare_dataset(config):
     X, y = np.asarray(X, dtype=float), np.asarray(y, dtype=int)
     if not np.isfinite(X).all():
         raise ValueError("Dataset contains non-finite values")
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=config.test_size, stratify=y, random_state=config.seed
+    return X, y
+
+
+def prepare_dataset(config):
+    X, y = load_dataset(config)
+    indices = np.arange(len(y))
+    seed = config.seed if config.split_seed is None else config.split_seed
+    train, test = train_test_split(
+        indices, test_size=config.test_size, stratify=y, random_state=seed
     )
-    if config.max_train_samples is not None and config.max_train_samples < len(y_train):
-        X_train, _, y_train, _ = train_test_split(
-            X_train,
-            y_train,
-            train_size=config.max_train_samples,
-            stratify=y_train,
-            random_state=config.seed,
+    validation = np.empty(0, dtype=int)
+    if config.validation_size:
+        train, validation = train_test_split(
+            train,
+            test_size=config.validation_size / (1 - config.test_size),
+            stratify=y[train],
+            random_state=seed,
         )
-    keep = np.flatnonzero(X_train.var(axis=0) > 1e-12)
+    if config.max_train_samples is not None and config.max_train_samples < len(train):
+        train, _ = train_test_split(
+            train,
+            train_size=config.max_train_samples,
+            stratify=y[train],
+            random_state=seed,
+        )
+    raw_train = X[train]
+    keep = np.flatnonzero(raw_train.var(axis=0) > 1e-12)
     if not len(keep):
         keep = np.array([0])
-    scales = np.maximum(np.abs(X_train[:, keep]).max(axis=0), 1e-9)
-    X_train, X_test = X_train[:, keep] / scales, X_test[:, keep] / scales
-    selected = select_features(X_train, y_train, config)
+    scales = np.maximum(np.abs(raw_train[:, keep]).max(axis=0), 1e-9)
+    selected = select_features(raw_train[:, keep] / scales, y[train], config)
     if not len(selected):
         selected = np.array([0])
+    features = keep[selected]
+    preprocessing = Preprocessing(
+        X.shape[1], features.tolist(), scales[selected].tolist()
+    )
+    digest = hashlib.sha256(
+        X.astype("<f8").tobytes() + y.astype("<i8").tobytes()
+    ).hexdigest()
     return PreparedDataset(
-        X_train[:, selected],
-        X_test[:, selected],
-        y_train,
-        y_test,
-        keep[selected],
+        preprocessing.transform(X[train]),
+        preprocessing.transform(X[test]),
+        y[train],
+        y[test],
+        features,
         X.shape[1],
+        preprocessing.transform(X[validation]),
+        y[validation],
+        preprocessing,
+        {
+            "train": train.tolist(),
+            "validation": validation.tolist(),
+            "test": test.tolist(),
+        },
+        digest,
     )

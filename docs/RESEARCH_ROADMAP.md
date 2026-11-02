@@ -12,8 +12,8 @@ All implementation notes and project documentation are maintained in English. Ea
 |---|---|---|
 | S00 — Record the approved roadmap | Complete | `docs: checkpoint the approved research roadmap` |
 | S01 — Freeze an initial protocol and remove CUDA-Q | Complete | `chore: remove CUDA-Q and record the exploratory protocol` |
-| S02 — Save preprocessing, validation splits, and complete models | Next | M1 |
-| S03 — Separate training/inference and capture optimizer traces | Pending | M1 |
+| S02 — Save preprocessing, validation splits, and complete models | Complete | `feat: persist preprocessing splits and frozen QDT models` |
+| S03 — Separate training/inference and capture optimizer traces | Next | M1 |
 | S04 — Implement Aer spatial packing and CPU/GPU selection | Pending | M2 |
 | S05 — Instrument execution and support packed hardware profiles | Pending | M3–M4 |
 | S06 — Implement resumable local campaigns and analysis | Pending | M5 |
@@ -25,7 +25,8 @@ Current environment: local macOS, Qiskit 2.1.2, Aer 0.17.2; Aer reports CPU only
 
 - S00: `d773f3a` records the approved roadmap.
 - S01: CUDA-Q adapter/config/dependencies/CI removed; 24 checks passed (one optional check skipped). Dependency resolution required registry metadata after the offline cache proved incomplete; existing retained versions were preserved. Initial protocol and related-work comparison are in `docs/research_protocol.md` and `docs/related_work.md`; references are in `paper/references.bib`. Final hardware budget and full-text novelty audit remain pending, so M0 is exploratory rather than fully frozen.
-- Next: M1 preprocessing/validation/model persistence; run tests before committing.
+- S02: complete JSON model artifacts include preprocessing, classes, split indices, dataset checksum, and integrity ID. Fresh-process inference roundtrip and training-only preprocessing verified. Examples now use 60/20/20 splits with fixed split seed; `validation_size=0` retains legacy API splits. 25 tests passed (one optional skip).
+- Next: S03 CLI training/inference separation, execution seeds, and optimizer traces.
 
 ## 1. Research objective and scope
 

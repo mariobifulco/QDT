@@ -13,6 +13,10 @@ class Config:
     dataset: str = "iris"
     data_dir: str = "datasets"
     seed: int = 42
+    validation_size: float = (
+        0.0  # Fraction of the full dataset; zero keeps legacy splits.
+    )
+    split_seed: int | None = None
     test_size: float = 0.2
     max_train_samples: int | None = None
     batch_size: int = 64
@@ -34,6 +38,7 @@ class Config:
     def __post_init__(self):
         for name in (
             "seed",
+            "split_seed",
             "batch_size",
             "shots",
             "threads",
@@ -45,7 +50,7 @@ class Config:
             "top_k",
         ):
             value = getattr(self, name)
-            if value is None and name in {"max_train_samples", "top_k"}:
+            if value is None and name in {"max_train_samples", "top_k", "split_seed"}:
                 continue
             if type(value) is not int:
                 raise ValueError(f"{name} must be an integer")
@@ -93,6 +98,8 @@ class Config:
             self.max_depth < 0
             or self.min_samples_leaf < 1
             or not 0 < self.test_size < 1
+            or not 0 <= self.validation_size < 1 - self.test_size
+            or (self.split_seed is not None and self.split_seed < 0)
         ):
             raise ValueError("Invalid tree size or test fraction")
         if self.top_k is not None and self.top_k < 1:
