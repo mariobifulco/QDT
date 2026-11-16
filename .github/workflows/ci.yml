@@ -19,10 +19,10 @@ jobs:
       - name: Check formatting
         run: uv run ruff format --check .
       - name: Core regression checks
-        run: uv run python -m unittest -v test_qdt test_model test_packing test_campaign
+        run: uv run python -m unittest -v tests.test_qdt tests.test_model tests.test_packing tests.test_campaign
       - name: Adapter checks
-        run: uv run python -m unittest -v test_adapters
+        run: uv run python -m unittest -v tests.test_adapters
       - name: Local QPU profiles and calibration download checks
-        run: uv run --extra ibm --extra iqm python -m unittest -v test_qpu test_ibm
+        run: uv run --extra ibm --extra iqm python -m unittest -v tests.test_qpu tests.test_ibm
       - name: Validate Slurm scripts
         run: bash -n slurm/run.sbatch && bash -n slurm/qdt.sbatch

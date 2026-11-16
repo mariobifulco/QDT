@@ -14,7 +14,7 @@ from qiskit_aer import AerSimulator
 from qdt.adapters import get_adapter
 from qdt.config import Config
 from qdt.experiment import train_model
-from test_packing import CIRCUIT, ROWS
+from tests.test_packing import CIRCUIT, ROWS
 
 
 @unittest.skipUnless(

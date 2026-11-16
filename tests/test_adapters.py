@@ -6,7 +6,7 @@ import numpy as np
 
 from qdt.adapters import get_adapter
 from qdt.config import Config
-from test_qdt import TEST_CIRCUIT
+from tests.test_qdt import TEST_CIRCUIT
 
 ANGLES = np.random.default_rng(5).uniform(-4, 4, (7, 3))
 

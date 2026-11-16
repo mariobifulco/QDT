@@ -19,6 +19,7 @@ from qdt.data import DATASET_KEYS, prepare_dataset, select_features
 from qdt.optimization import gini, optimize_split, soft_gini, split_score
 from qdt.quantum_tree import QNode, fit, predict, run_probabilities
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 TEST_CIRCUIT = Circuit(
     num_qubits=1,
     readout_qubit=0,
@@ -479,24 +480,22 @@ class QDTTests(unittest.TestCase):
         ):
             with self.assertRaises(ValueError):
                 Config(circuit=TEST_CIRCUIT, **values)
-        repository = Path(__file__).resolve().parent
+        configs = REPOSITORY_ROOT / "configs"
         filenames = {
             "ibm.json",
             "iqm.json",
             "custom_noisy.json",
             "aer_noiseless.json",
         }
-        self.assertEqual(
-            {p.name for p in (repository / "configs").glob("*.json")}, filenames
-        )
+        self.assertEqual({p.name for p in configs.glob("*.json")}, filenames)
         for filename in filenames:
-            path = repository / "configs" / filename
+            path = configs / filename
             config = Config.load(path)
             self.assertEqual(set(json.loads(path.read_text())), set(asdict(config)))
             self.assertEqual(config.circuit.num_qubits, 2)
-        ideal = Config.load(repository / "configs/aer_noiseless.json")
+        ideal = Config.load(configs / "aer_noiseless.json")
         self.assertEqual(Adapter(ideal).device_name, "statevector")
-        noisy = Config.load(repository / "configs/custom_noisy.json")
+        noisy = Config.load(configs / "custom_noisy.json")
         self.assertIsNone(noisy.fake_qpu)
         self.assertTrue(all(rate > 0 for rate in noisy.noise_rates))
         noisy = replace(noisy, shots=0)
@@ -508,7 +507,6 @@ class QDTTests(unittest.TestCase):
             Config(circuit=TEST_CIRCUIT, backend="pennylane")
 
     def test_slurm_and_cli_output_overwrite_protection(self):
-        repository = Path(__file__).resolve().parent
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             config = root / "run.json"
@@ -535,12 +533,12 @@ class QDTTests(unittest.TestCase):
             )
             command = [
                 "bash",
-                str(repository / "slurm/run.sbatch"),
+                str(REPOSITORY_ROOT / "slurm/run.sbatch"),
                 str(config),
                 str(root / "results"),
             ]
             subprocess.run(
-                command, env=env, cwd=repository, check=True, capture_output=True
+                command, env=env, cwd=REPOSITORY_ROOT, check=True, capture_output=True
             )
             result = json.loads((root / "results/3.json").read_text())
             self.assertEqual(result["config"]["seed"], 3)
@@ -551,7 +549,7 @@ class QDTTests(unittest.TestCase):
             self.assertIn("macro_f1", result["cart"])
             self.assertNotEqual(
                 subprocess.run(
-                    command, env=env, cwd=repository, capture_output=True
+                    command, env=env, cwd=REPOSITORY_ROOT, capture_output=True
                 ).returncode,
                 0,
             )

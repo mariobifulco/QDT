@@ -11,7 +11,7 @@ from qdt.config import Config
 from qdt.experiment import train_model
 from qdt.model import Model, write_json
 from qdt.selection import policy_execution, select
-from test_qdt import TEST_CIRCUIT
+from tests.test_qdt import TEST_CIRCUIT
 
 
 class CampaignTests(unittest.TestCase):
@@ -164,7 +164,7 @@ class CampaignTests(unittest.TestCase):
 
     def test_profile_bytes_are_frozen_before_execution(self):
         from qdt.qpu import write_profile
-        from test_qpu import ibm_test_profile
+        from tests.test_qpu import ibm_test_profile
 
         with tempfile.TemporaryDirectory() as folder:
             root, manifest_path, manifest = self.prepare(folder)

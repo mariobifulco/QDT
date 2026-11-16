@@ -15,7 +15,7 @@ from qdt.config import Config
 from qdt.data import load_dataset, prepare_dataset
 from qdt.model import Model
 from qdt.quantum_tree import fit
-from test_qdt import TEST_CIRCUIT
+from tests.test_qdt import TEST_CIRCUIT
 
 
 class ModelTests(unittest.TestCase):
